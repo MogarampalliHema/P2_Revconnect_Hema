@@ -1,0 +1,18 @@
+# Maven
+/target/
+
+# Logs
+logs/
+*.log
+
+# IDE
+.idea/
+../RevConnect_P2/.vscode/
+*.iml
+
+# Uploads
+uploads/
+
+# OS
+.DS_Store
+Thumbs.db
