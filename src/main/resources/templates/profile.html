@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+    th:replace="~{layout :: layout(layout_content=~{::section})}">
+
+<head>
+    <title th:text="${profileUser.username + ' — RevConnect'}">Profile</title>
+</head>
+
+<body>
+    <section>
+        <div class="container main-content">
+            <!-- Profile Column -->
+            <div style="grid-column: 1 / 3;">
+                <div style="margin-bottom: 1rem;">
+                    <button onclick="history.back()" class="btn btn-ghost btn-sm"
+                        style="padding: 0.5rem; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); box-shadow: var(--shadow-sm);"
+                        title="Go Back">
+                        <i data-lucide="arrow-left" style="width: 20px;"></i>
+                    </button>
+                </div>
+                <div class="card card-flush mb-8">
+                    <div class="profile-cover"></div>
+                    <div class="profile-avatar-container">
+                        <div class="avatar avatar-lg" style="overflow: hidden;">
+                            <img th:if="${profileUser.profilePicture != null && !profileUser.profilePicture.isEmpty()}"
+                                th:src="@{${profileUser.profilePicture}}"
+                                style="width: 100%; height: 100%; object-fit: cover;" alt="" />
+                            <span th:if="${profileUser.profilePicture == null || profileUser.profilePicture.isEmpty()}"
+                                th:text="${profileUser.fullName != null ? profileUser.fullName.substring(0,1).toUpperCase() : profileUser.username.substring(0,1).toUpperCase()}"
+                                style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--primary-gradient); color: white;"></span>
+                        </div>
+
+                        <div class="flex gap-4 mb-4">
+                            <div th:if="${isOwnProfile}">
+                                <a th:href="@{/profile/edit}" class="btn btn-outline btn-sm">
+                                    <i data-lucide="edit-3" style="width: 16px;"></i>
+                                    <span>Edit</span>
+                                </a>
+                            </div>
+                            <div th:if="${!isOwnProfile}" class="flex gap-2">
+                                <!-- Connect -->
+                                <form th:if="${!isConnected and !hasPendingRequest}"
+                                    th:action="@{'/connections/request/' + ${profileUser.id}}" method="post">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                    <button type="submit" class="btn btn-primary btn-sm">Connect</button>
+                                </form>
+                                <button th:if="${hasPendingRequest}" class="btn btn-outline btn-sm"
+                                    disabled>Pending</button>
+                                <button th:if="${isConnected}" class="btn btn-outline btn-sm"
+                                    disabled>Connected</button>
+
+                                <!-- Follow / Unfollow -->
+                                <form th:if="${!isFollowing}" th:action="@{'/follow/' + ${profileUser.id}}"
+                                    method="post">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                    <button type="submit" class="btn btn-outline btn-sm">Follow</button>
+                                </form>
+                                <form th:if="${isFollowing}" th:action="@{'/follow/' + ${profileUser.id} + '/unfollow'}"
+                                    method="post">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                    <button type="submit" class="btn btn-outline btn-sm">Unfollow</button>
+                                </form>
+
+                                <a th:href="@{'/messages/' + ${profileUser.id}}" class="btn btn-outline btn-sm">
+                                    <i data-lucide="mail" style="width: 16px;"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="padding: 1.5rem 3rem 3rem;">
+                        <h1 class="mb-2" style="font-size: 2.25rem;">
+                            <span th:text="${profileUser.fullName ?: profileUser.username}"></span>
+                            <span th:if="${profileUser.role.name() != 'PERSONAL'}" class="badge ml-2"
+                                th:text="${profileUser.role}"></span>
+                        </h1>
+                        <p class="text-secondary text-lg mb-6" th:text="'@' + ${profileUser.username}"></p>
+
+                        <p class="mb-8 post-content" th:if="${profileUser.bio}" th:text="${profileUser.bio}"></p>
+
+                        <div class="flex gap-6 text-sm text-muted mb-8">
+                            <div th:if="${profileUser.location}" class="flex items-center gap-2">
+                                <i data-lucide="map-pin" class="icon-sky" style="width: 16px;"></i>
+                                <span th:text="${profileUser.location}"></span>
+                            </div>
+                            <div th:if="${profileUser.website}" class="flex items-center gap-2">
+                                <i data-lucide="link" class="icon-lavender" style="width: 16px;"></i>
+                                <a th:href="${profileUser.website}" th:text="${profileUser.website}"
+                                    class="hover:text-primary"></a>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="calendar" class="icon-mint" style="width: 16px;"></i>
+                                <span>Joined <span
+                                        th:text="${#temporals.format(profileUser.createdAt,'MMMM yyyy')}"></span></span>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-12 pt-8 justify-start px-2"
+                            style="border-top: 1px solid var(--border-light);">
+                            <a th:href="@{'/profile/' + ${profileUser.username} + '/followers'}"
+                                class="stat-item-minimal" style="text-decoration: none;">
+                                <div class="stat-value" th:text="${followerCount}">0</div>
+                                <div class="stat-label">Followers</div>
+                            </a>
+                            <a th:href="@{'/profile/' + ${profileUser.username} + '/following'}"
+                                class="stat-item-minimal" style="margin-left: 1rem; text-decoration: none;">
+                                <div class="stat-value" th:text="${followingCount}">0</div>
+                                <div class="stat-label">Following</div>
+                            </a>
+                            <a th:href="@{'/profile/' + ${profileUser.username} + '/network'}" class="stat-item-minimal"
+                                style="margin-left: 1rem; text-decoration: none;">
+                                <div class="stat-value" th:text="${connectionCount}">0</div>
+                                <div class="stat-label">Connections</div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="widget-title mb-6">Recent Activity</h3>
+
+                <div th:if="${!canViewPosts}" class="card text-center py-12">
+                    <i data-lucide="lock" class="mx-auto mb-4 text-muted" style="width: 48px; height: 48px;"></i>
+                    <h3 class="font-bold">Private Profile</h3>
+                    <p class="text-secondary">Connect to see their thoughts.</p>
+                </div>
+
+                <div th:if="${canViewPosts}">
+                    <div th:if="${posts == null or posts.empty}" class="card text-center py-12">
+                        <p class="text-secondary">No activity yet.</p>
+                    </div>
+
+                    <div th:each="post : ${posts}" class="card mb-6 post shadow-sm">
+                        <div class="post-header mb-4">
+                            <div class="avatar" style="width: 32px; height: 32px; font-size: 0.8rem; overflow: hidden;">
+                                <img th:if="${post.author.profilePicture != null && !post.author.profilePicture.isEmpty()}"
+                                    th:src="@{${post.author.profilePicture}}"
+                                    style="width: 100%; height: 100%; object-fit: cover;" alt="" />
+                                <span
+                                    th:if="${post.author.profilePicture == null || post.author.profilePicture.isEmpty()}"
+                                    th:text="${post.author.username.substring(0,1).toUpperCase()}"></span>
+                            </div>
+                            <div class="post-author">
+                                <span class="author-name" style="font-size: 0.9rem;"
+                                    th:text="${post.author.fullName ?: post.author.username}"></span>
+                                <span class="post-time" style="font-size: 0.7rem;"
+                                    th:text="${#temporals.format(post.createdAt,'dd MMM, HH:mm')}"></span>
+                            </div>
+                            <!-- Delete button at top-right of post header (own profile only) -->
+                            <div th:if="${isOwnProfile}" style="margin-left: auto;">
+                                <form th:action="@{'/posts/' + ${post.id} + '/delete'}" method="post"
+                                    onsubmit="return confirm('Delete this post?');">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                    <button type="submit" class="btn btn-ghost btn-sm"
+                                        style="color: var(--danger); padding: 0.25rem;">
+                                        <i data-lucide="trash-2" style="width: 14px;"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="post-content" th:text="${post.content}"></div>
+
+                        <!-- Post Image Display -->
+                        <div th:if="${post.imageUrl != null}" class="post-image mb-4"
+                            style="border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
+                            <img th:src="@{${post.imageUrl}}" style="width: 100%; max-height: 400px; object-fit: cover;"
+                                alt="Post content" />
+                        </div>
+
+                        <!-- Hashtags - clickable -->
+                        <div class="flex gap-3 mt-4"
+                            th:if="${post.hashtags != null and !#strings.isEmpty(post.hashtags)}">
+                            <a th:each="tag : ${#strings.arraySplit(post.hashtags,',')}"
+                                th:href="@{/posts/search(hashtag=${#strings.trim(tag).replace('#','')})}"
+                                class="text-xs font-bold icon-sky" style="text-decoration: none;"
+                                th:text="${#strings.trim(tag).startsWith('#') ? #strings.trim(tag) : '#' + #strings.trim(tag)}"></a>
+                        </div>
+
+                        <div class="post-actions">
+                            <form th:action="@{'/posts/' + ${post.id} + '/like'}" method="post">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <button type="submit" class="action-item">
+                                    <i data-lucide="heart" class="icon-peach"></i>
+                                    <span th:text="${post.likes.size()}">0</span>
+                                </button>
+                            </form>
+                            <a th:href="@{'/posts/' + ${post.id}}" class="action-item">
+                                <i data-lucide="message-circle" class="icon-sky"></i>
+                                <span th:text="${post.comments.size()}">0</span>
+                            </a>
+                            <form th:action="@{'/posts/' + ${post.id} + '/share'}" method="post"
+                                style="margin-left: auto;">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <button type="submit" class="action-item">
+                                    <i data-lucide="share-2" class="icon-mint"></i>
+                                    <span th:text="${post.shares.size()}">0</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <aside class="sidebar-right">
+                <div class="card mb-6">
+                    <div class="widget-title">Network Insight</div>
+                    <p class="text-xs text-secondary leading-relaxed">
+                        This user is part of the RevConnect community since
+                        <span th:text="${#temporals.format(profileUser.createdAt,'yyyy')}"></span>.
+                    </p>
+                </div>
+            </aside>
+        </div>
+    </section>
+</body>
+
+</html>

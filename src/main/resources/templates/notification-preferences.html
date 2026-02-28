@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(layout_content=~{::section})}">
+
+<head>
+    <title>Notification Settings — RevConnect</title>
+</head>
+
+<body>
+    <section>
+        <div class="container main-content" style="grid-template-columns: 1fr;">
+            <div style="max-width: 600px; margin: 0 auto; width: 100%;">
+                <div style="margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem;">
+                    <button onclick="history.back()" class="btn btn-ghost btn-sm" style="padding: 0.5rem;"
+                        title="Go Back">
+                        <i data-lucide="arrow-left" style="width: 20px;"></i>
+                    </button>
+                    <h1 style="font-size: 1.75rem;">Notification Settings</h1>
+                </div>
+
+                <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"
+                    style="margin-bottom: 1.5rem; border-radius: 1rem; border-left: 4px solid #10b981;"></div>
+
+                <div class="card" style="padding: 2.5rem;">
+                    <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem;">
+                        Choose which events you want to be notified about.
+                    </p>
+
+                    <form th:action="@{/notifications/preferences}" method="post" th:object="${prefsDTO}">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                        <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                            <div class="checkbox-group"
+                                style="padding: 1.25rem; background: var(--bg-soft); border-radius: 0.75rem; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 1rem;">
+                                <input type="checkbox" id="cr" th:field="*{connectionRequests}"
+                                    style="width: 20px; height: 20px; cursor: pointer;" />
+                                <label for="cr" style="font-weight: 600; cursor: pointer; flex: 1;">Connection
+                                    Requests</label>
+                            </div>
+
+                            <div class="checkbox-group"
+                                style="padding: 1.25rem; background: var(--bg-soft); border-radius: 0.75rem; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 1rem;">
+                                <input type="checkbox" id="ca" th:field="*{connectionAccepted}"
+                                    style="width: 20px; height: 20px; cursor: pointer;" />
+                                <label for="ca" style="font-weight: 600; cursor: pointer; flex: 1;">Connection
+                                    Accepted</label>
+                            </div>
+
+                            <div class="checkbox-group"
+                                style="padding: 1.25rem; background: var(--bg-soft); border-radius: 0.75rem; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 1rem;">
+                                <input type="checkbox" id="nf" th:field="*{newFollowers}"
+                                    style="width: 20px; height: 20px; cursor: pointer;" />
+                                <label for="nf" style="font-weight: 600; cursor: pointer; flex: 1;">New
+                                    Followers</label>
+                            </div>
+
+                            <div class="checkbox-group"
+                                style="padding: 1.25rem; background: var(--bg-soft); border-radius: 0.75rem; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 1rem;">
+                                <input type="checkbox" id="pl" th:field="*{postLikes}"
+                                    style="width: 20px; height: 20px; cursor: pointer;" />
+                                <label for="pl" style="font-weight: 600; cursor: pointer; flex: 1;">Post Likes</label>
+                            </div>
+
+                            <div class="checkbox-group"
+                                style="padding: 1.25rem; background: var(--bg-soft); border-radius: 0.75rem; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 1rem;">
+                                <input type="checkbox" id="pc" th:field="*{postComments}"
+                                    style="width: 20px; height: 20px; cursor: pointer;" />
+                                <label for="pc" style="font-weight: 600; cursor: pointer; flex: 1;">Post
+                                    Comments</label>
+                            </div>
+
+                            <div class="checkbox-group"
+                                style="padding: 1.25rem; background: var(--bg-soft); border-radius: 0.75rem; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 1rem;">
+                                <input type="checkbox" id="ps" th:field="*{postShares}"
+                                    style="width: 20px; height: 20px; cursor: pointer;" />
+                                <label for="ps" style="font-weight: 600; cursor: pointer; flex: 1;">Post Shares</label>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 2.5rem;">
+                            <button type="submit" class="btn btn-primary"
+                                style="width: 100%; padding: 1rem; font-weight: 700;">Save Settings</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+
+</html>

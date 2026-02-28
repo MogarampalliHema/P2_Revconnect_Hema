@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+    th:replace="~{layout :: layout(layout_content=~{::section})}">
+
+<head>
+    <title>Edit Profile — RevConnect</title>
+</head>
+
+<body>
+    <section>
+        <div class="container main-content" style="grid-template-columns: 1fr;">
+            <div style="max-width: 600px; margin: 0 auto; width: 100%;">
+                <div class="flex items-center gap-4 mb-6">
+                    <button onclick="history.back()" class="btn btn-ghost btn-sm" style="padding: 0.5rem;"
+                        title="Go Back">
+                        <i data-lucide="arrow-left" style="width: 20px;"></i>
+                    </button>
+                    <h1 style="font-size: 1.5rem;">Edit Profile</h1>
+                </div>
+
+                <div th:if="${successMessage}" class="alert alert-success mb-6">
+                    <i data-lucide="check-circle" style="width: 20px;"></i>
+                    <span th:text="${successMessage}"></span>
+                </div>
+
+                <!-- General Info Form -->
+                <div class="card mb-6">
+                    <h3 class="widget-title">General Information</h3>
+                    <form th:action="@{/profile/edit}" method="post" th:object="${profileDTO}">
+                        <!-- CSRF Token -->
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                        <div class="grid gap-4" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label class="form-label">Full Name</label>
+                                <input type="text" th:field="*{fullName}" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Privacy</label>
+                                <select th:field="*{privacySetting}" class="form-control">
+                                    <option th:each="p : ${privacyOptions}" th:value="${p}" th:text="${p}"></option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Bio</label>
+                            <textarea th:field="*{bio}" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <div class="grid gap-4" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label class="form-label">Location</label>
+                                <input type="text" th:field="*{location}" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Website</label>
+                                <input type="url" th:field="*{website}" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div th:if="${currentUser.role.name() != 'PERSONAL'}" class="mt-6 pt-6"
+                            style="border-top: 1px solid var(--border-color);">
+                            <h3 class="widget-title">Business Settings</h3>
+                            <div class="grid gap-4" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div class="form-group">
+                                    <label class="form-label">Category</label>
+                                    <input type="text" th:field="*{category}" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Contact Info</label>
+                                    <input type="text" th:field="*{contactInfo}" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-full mt-4">Save Changes</button>
+                    </form>
+                </div>
+
+                <!-- Profile Picture Upload Form -->
+                <div class="card">
+                    <h3 class="widget-title">Profile Picture</h3>
+                    <form th:action="@{/profile/picture( ${_csrf.parameterName}=${_csrf.token} )}" method="post"
+                        enctype="multipart/form-data">
+                        <!-- CSRF Token -->
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                        <div class="flex items-center gap-4">
+                            <div class="avatar avatar-lg" style="overflow: hidden;">
+                                <img th:if="${currentUser.profilePicture != null && !currentUser.profilePicture.isEmpty()}"
+                                    th:src="@{${currentUser.profilePicture}}"
+                                    style="width: 100%; height: 100%; object-fit: cover;" alt="" />
+                                <span
+                                    th:if="${currentUser.profilePicture == null || currentUser.profilePicture.isEmpty()}"
+                                    th:text="${currentUser.username.substring(0,1).toUpperCase()}"
+                                    style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--primary-gradient); color: white;"></span>
+                            </div>
+                            <div style="flex: 1;">
+                                <input type="file" name="file" accept="image/*" class="form-control mb-2" />
+                                <p class="text-xs text-muted">Square image works best. Max 5MB.</p>
+                            </div>
+                            <button type="submit" class="btn btn-outline btn-sm">Upload</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+
+</html>

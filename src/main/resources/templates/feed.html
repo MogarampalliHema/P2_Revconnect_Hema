@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+    th:replace="~{layout :: layout(layout_content=~{::section})}">
+
+<head>
+    <title>Activity Feed — RevConnect</title>
+</head>
+
+<body>
+    <section>
+        <div class="container main-content">
+            <!-- Left Sidebar -->
+            <aside class="sidebar-left">
+                <div class="card card-flush overflow-hidden mb-6" style="padding: 0;">
+                    <div style="height: 100px; background: var(--primary-gradient); position: relative;">
+                        <!-- Optional: Add a subtle mesh pattern here -->
+                    </div>
+                    <div style="padding: 0 1.5rem 1.5rem; margin-top: -40px; position: relative; z-index: 1;">
+                        <div class="avatar avatar-md border-white mb-4"
+                            style="border-width: 4px; box-shadow: var(--shadow-md);">
+                            <img th:if="${currentUser.profilePicture != null && !currentUser.profilePicture.isEmpty()}"
+                                th:src="@{${currentUser.profilePicture}}"
+                                style="width: 100%; height: 100%; object-fit: cover;" alt="" />
+                            <span th:if="${currentUser.profilePicture == null || currentUser.profilePicture.isEmpty()}"
+                                th:text="${currentUser.username.substring(0,1).toUpperCase()}"
+                                style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--primary-gradient); color: white;"></span>
+                        </div>
+                        <h4 class="font-bold mb-1" style="font-size: 1.125rem;"
+                            th:text="${currentUser.fullName ?: currentUser.username}"></h4>
+                        <p class="text-sm text-muted mb-5" th:text="'@' + ${currentUser.username}"></p>
+
+                        <div class="flex gap-4 pt-5 border-t border-slate-100 justify-between">
+                            <a th:href="@{'/profile/' + ${currentUser.username} + '/followers'}"
+                                class="text-center group" style="text-decoration: none;">
+                                <span class="block text-base font-bold" style="color: var(--primary);"
+                                    th:text="${followerCount ?: 0}"></span>
+                                <span class="text-xs text-muted font-bold uppercase tracking-wider"
+                                    style="font-size: 0.65rem;">Followers</span>
+                            </a>
+                            <a th:href="@{'/profile/' + ${currentUser.username} + '/network'}" class="text-center group"
+                                style="text-decoration: none;">
+                                <span class="block text-base font-bold" style="color: var(--primary-alt);"
+                                    th:text="${connectionCount ?: 0}"></span>
+                                <span class="text-xs text-muted font-bold uppercase tracking-wider"
+                                    style="font-size: 0.65rem;">Network</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="widget-title">Quick Links</div>
+                    <div class="flex flex-direction-column gap-2">
+                        <a th:href="@{/analytics}"
+                            class="nav-link py-2 px-1 text-sm hover:translate-x-1 transition-transform inline-flex items-center gap-2">
+                            <i data-lucide="line-chart" class="icon-mint" style="width: 16px;"></i>
+                            <span>Insights</span>
+                        </a>
+                        <a th:href="@{/profile/edit}"
+                            class="nav-link py-2 px-1 text-sm hover:translate-x-1 transition-transform inline-flex items-center gap-2">
+                            <i data-lucide="settings" class="icon-peach" style="width: 16px;"></i>
+                            <span>Settings</span>
+                        </a>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Feed -->
+            <div class="feed-column">
+
+                <!-- ===== POST CREATION FORM ===== -->
+                <div class="card mb-8">
+                    <form th:action="@{/feed/post( ${_csrf.parameterName}=${_csrf.token} )}" method="post" id="postForm"
+                        enctype="multipart/form-data">
+                        <!-- CSRF Token (required by Spring Security) -->
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                        <div class="flex gap-4">
+                            <div class="avatar" style="width: 44px; height: 44px;">
+                                <img th:if="${currentUser.profilePicture != null && !currentUser.profilePicture.isEmpty()}"
+                                    th:src="@{${currentUser.profilePicture}}"
+                                    style="width: 100%; height: 100%; object-fit: cover;" alt="" />
+                                <span
+                                    th:if="${currentUser.profilePicture == null || currentUser.profilePicture.isEmpty()}"
+                                    th:text="${currentUser.username.substring(0,1).toUpperCase()}"
+                                    style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--primary-gradient); color: white;"></span>
+                            </div>
+                            <div class="w-full">
+                                <textarea name="content" id="postContent" class="form-control"
+                                    style="resize: none; font-size: 1.125rem; font-weight: 400; border: none; padding: 0.5rem 0; box-shadow: none; min-height: 80px;"
+                                    placeholder="What's your latest breakthrough?" required></textarea>
+
+                                <!-- Image Preview Container -->
+                                <div id="imagePreviewContainer"
+                                    style="display: none; position: relative; margin-top: 1rem; margin-bottom: 1.5rem; border-radius: 16px; overflow: hidden; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);">
+                                    <img id="imagePreview" src="#"
+                                        style="width: 100%; max-height: 400px; object-fit: cover;" />
+                                    <button type="button" id="removeImgBtn"
+                                        style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                        <i data-lucide="x" style="width: 18px;"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Hashtag input — toggled by the # button -->
+                                <div id="hashtagRow" style="display: none; margin-bottom: 1rem;">
+                                    <div style="position: relative;">
+                                        <i data-lucide="hash"
+                                            style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 14px; color: var(--text-muted);"></i>
+                                        <input type="text" name="hashtags" id="hashtagInput" class="form-control"
+                                            style="font-size: 0.875rem; padding-left: 2rem;"
+                                            placeholder="java, springboot, innovation (comma-separated)" />
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+                                    <div class="flex gap-2">
+                                        <!-- Hidden file input -->
+                                        <input type="file" name="image" id="imageInput" accept="image/*"
+                                            style="display: none;" />
+                                        <button type="button" id="imgBtn" class="btn btn-ghost btn-sm" title="Add Image"
+                                            style="padding: 0.5rem; border-radius: 8px;">
+                                            <i data-lucide="image" style="width: 20px; color: var(--primary);"></i>
+                                        </button>
+                                        <button type="button" id="hashBtn" class="btn btn-ghost btn-sm" title="Add Tags"
+                                            style="padding: 0.5rem; border-radius: 8px;">
+                                            <i data-lucide="hash" style="width: 20px; color: var(--primary-alt);"></i>
+                                        </button>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary"
+                                        style="padding: 0.5rem 1.5rem;">Post</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <script>
+                        // Toggle hashtag input when # button is clicked
+                        document.getElementById('hashBtn').addEventListener('click', function () {
+                            var row = document.getElementById('hashtagRow');
+                            var isHidden = row.style.display === 'none';
+                            row.style.display = isHidden ? 'block' : 'none';
+                            if (isHidden) {
+                                document.getElementById('hashtagInput').focus();
+                                this.style.backgroundColor = 'rgba(139,92,246,0.12)';
+                                this.style.borderRadius = '8px';
+                            } else {
+                                this.style.backgroundColor = '';
+                            }
+                        });
+
+                        // Image button handler
+                        const imgBtn = document.getElementById('imgBtn');
+                        const imageInput = document.getElementById('imageInput');
+                        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+                        const imagePreview = document.getElementById('imagePreview');
+                        const removeImgBtn = document.getElementById('removeImgBtn');
+
+                        imgBtn.addEventListener('click', () => imageInput.click());
+
+                        imageInput.addEventListener('change', function () {
+                            const file = this.files[0];
+                            if (file) {
+                                const reader = new FileReader();
+                                reader.onload = function (e) {
+                                    imagePreview.src = e.target.result;
+                                    imagePreviewContainer.style.display = 'block';
+                                    imgBtn.style.backgroundColor = 'rgba(56,189,248,0.12)';
+                                    imgBtn.style.borderRadius = '8px';
+                                }
+                                reader.readAsDataURL(file);
+                            }
+                        });
+
+                        removeImgBtn.addEventListener('click', function () {
+                            imageInput.value = '';
+                            imagePreviewContainer.style.display = 'none';
+                            imagePreview.src = '#';
+                            imgBtn.style.backgroundColor = '';
+                        });
+                    </script>
+                </div>
+                <!-- ===== END POST CREATION FORM ===== -->
+
+                <div th:if="${posts == null or posts.empty}" class="card text-center py-16">
+                    <i data-lucide="sparkles" class="icon-lavender mx-auto mb-4" style="width: 40px; height: 40px;"></i>
+                    <p class="text-secondary">Be the first to start a conversation.</p>
+                </div>
+
+                <div th:each="post : ${posts}" class="card mb-6 post shadow-sm">
+                    <div class="post-header">
+                        <div class="avatar" style="width: 44px; height: 44px;">
+                            <img th:if="${post.author.profilePicture != null && !post.author.profilePicture.isEmpty()}"
+                                th:src="@{${post.author.profilePicture}}"
+                                style="width: 100%; height: 100%; object-fit: cover;" alt="" />
+                            <span th:if="${post.author.profilePicture == null || post.author.profilePicture.isEmpty()}"
+                                th:text="${post.author.username.substring(0,1).toUpperCase()}"
+                                style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--primary-gradient); color: white;"></span>
+                        </div>
+                        <div class="post-author">
+                            <a th:href="@{'/profile/' + ${post.author.username}}" class="author-name"
+                                style="font-weight: 700; color: var(--text-main); font-size: 0.9375rem;"
+                                th:text="${post.author.fullName ?: post.author.username}"></a>
+                            <span class="post-time" style="font-size: 0.75rem; letter-spacing: 0.02em;"
+                                th:text="${#temporals.format(post.createdAt,'dd MMM, HH:mm')}"></span>
+                        </div>
+                        <div th:if="${post.author.id == currentUser.id}" style="margin-left: auto;">
+                            <form th:action="@{'/posts/' + ${post.id} + '/delete'}" method="post"
+                                onsubmit="return confirm('Delete this post?');">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <button type="submit" class="btn btn-ghost btn-sm"
+                                    style="color: var(--text-muted); opacity: 0.6; padding: 0.4rem; border-radius: 50%;">
+                                    <i data-lucide="trash-2" style="width: 16px;"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="post-content" th:text="${post.content}"></div>
+
+                    <!-- Post Image Display -->
+                    <div th:if="${post.imageUrl != null and !post.imageUrl.isEmpty()}" class="post-image mb-4"
+                        style="border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
+                        <img th:src="@{${post.imageUrl}}"
+                            style="width: 100%; max-height: 500px; object-fit: cover; display: block;"
+                            alt="Post content image" />
+                    </div>
+
+                    <!-- Hashtags display — clickable links to search -->
+                    <div class="flex gap-3" th:if="${post.hashtags != null and !#strings.isEmpty(post.hashtags)}">
+                        <a th:each="tag : ${#strings.arraySplit(post.hashtags,',')}"
+                            th:href="@{/posts/search(hashtag=${#strings.trim(tag).replace('#','')})}"
+                            class="text-xs font-bold icon-sky" style="text-decoration: none; cursor: pointer;"
+                            th:text="${#strings.trim(tag).startsWith('#') ? #strings.trim(tag) : '#' + #strings.trim(tag)}"></a>
+                    </div>
+
+                    <div class="post-actions">
+                        <form th:action="@{'/posts/' + ${post.id} + '/like'}" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                            <button type="submit" class="action-item">
+                                <i data-lucide="heart" class="icon-peach"></i>
+                                <span th:text="${post.likes.size()}">0</span>
+                            </button>
+                        </form>
+                        <a th:href="@{'/posts/' + ${post.id}}" class="action-item">
+                            <i data-lucide="message-circle" class="icon-sky"></i>
+                            <span th:text="${post.comments.size()}">0</span>
+                        </a>
+                        <form th:action="@{'/posts/' + ${post.id} + '/share'}" method="post" style="margin-left: auto;">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                            <button type="submit" class="action-item">
+                                <i data-lucide="share-2" class="icon-mint"></i>
+                                <span th:text="${post.shares.size()}">0</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div th:if="${totalPages != null and totalPages > 1}" class="flex gap-2 justify-center mt-4">
+                    <a th:if="${currentPage > 0}" th:href="@{/feed(page=${currentPage - 1})}"
+                        class="btn btn-outline btn-sm">← Prev</a>
+                    <span class="btn btn-sm" style="cursor: default;"
+                        th:text="'Page ' + ${currentPage + 1} + ' of ' + ${totalPages}"></span>
+                    <a th:if="${currentPage + 1 < totalPages}" th:href="@{/feed(page=${currentPage + 1})}"
+                        class="btn btn-outline btn-sm">Next →</a>
+                </div>
+            </div>
+
+            <!-- Right Sidebar -->
+            <aside class="sidebar-right">
+                <div class="card mb-8">
+                    <div class="widget-title">Explore Network</div>
+                    <form th:action="@{/profile/search}" method="get" class="mb-4">
+                        <div class="relative">
+                            <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-muted"
+                                style="width: 16px;"></i>
+                            <input type="text" name="q" class="form-control pl-11 text-sm bg-slate-50 border-none"
+                                placeholder="Find people..." />
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Trending Hashtags -->
+                <div class="card mb-8" th:if="${trending != null and !trending.empty}">
+                    <div class="widget-title">Trending</div>
+                    <div class="flex flex-direction-column gap-2">
+                        <div th:each="tp : ${trending}"
+                            th:if="${tp.hashtags != null and !#strings.isEmpty(tp.hashtags)}">
+                            <a th:each="tag : ${#strings.arraySplit(tp.hashtags,',')}"
+                                th:href="@{/posts/search(hashtag=${#strings.trim(tag).replace('#','')})}"
+                                class="text-xs font-bold icon-lavender"
+                                style="display: inline-block; margin-right: 0.4rem; text-decoration: none;"
+                                th:text="${#strings.trim(tag).startsWith('#') ? #strings.trim(tag) : '#' + #strings.trim(tag)}">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="widget-title">Coming Soon</div>
+                    <p class="text-xs text-secondary leading-relaxed mb-4">
+                        We're building new ways for you to collaborate and innovate together.
+                    </p>
+                    <div class="bg-slate-50 p-4 rounded-lg">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full bg-emerald-300"></div>
+                            <span class="text-xs font-bold">Group Channels</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </section>
+</body>
+
+</html>
