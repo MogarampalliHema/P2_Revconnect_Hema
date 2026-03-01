@@ -22,7 +22,7 @@ public class ConnectionService {
     private final NotificationService notificationService;
 
     public ConnectionService(ConnectionRepository connectionRepository,
-            NotificationService notificationService) {
+                             NotificationService notificationService) {
         this.connectionRepository = connectionRepository;
         this.notificationService = notificationService;
     }
@@ -89,8 +89,8 @@ public class ConnectionService {
 
     @Transactional(readOnly = true)
     public List<User> getConnections(User user) {
-        return connectionRepository.findAcceptedConnections(user).stream()
-                .map(c -> c.getSender().equals(user) ? c.getReceiver() : c.getSender())
+        return connectionRepository.findAcceptedConnections(user.getId()).stream()
+                .map(c -> c.getSender().getId().equals(user.getId()) ? c.getReceiver() : c.getSender())
                 .collect(Collectors.toList());
     }
 
