@@ -15,11 +15,14 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
 
     Optional<Follow> findByFollowerAndFollowed(User follower, User followed);
 
-    boolean existsByFollowerIdAndFollowedId(Long followerId, Long followedId);
+    @Query("SELECT CASE WHEN COUNT(f) > 0 THEN TRUE ELSE FALSE END FROM Follow f WHERE f.follower.id = :followerId AND f.followed.id = :followedId")
+    boolean existsByFollowerIdAndFollowedId(@Param("followerId") Long followerId, @Param("followedId") Long followedId);
 
-    List<Follow> findByFollowerId(Long followerId);
+    @Query("SELECT f FROM Follow f JOIN FETCH f.follower WHERE f.followed.id = :userId")
+    List<Follow> findByFollowedId(@Param("userId") Long userId);
 
-    List<Follow> findByFollowedId(Long followedId);
+    @Query("SELECT f FROM Follow f JOIN FETCH f.followed WHERE f.follower.id = :userId")
+    List<Follow> findByFollowerId(@Param("userId") Long userId);
 
     @Query("SELECT f.followed.id FROM Follow f WHERE f.follower.id = :userId")
     List<Long> findFollowedUserIdsByFollower(@Param("userId") Long userId);
