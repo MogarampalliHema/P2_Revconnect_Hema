@@ -37,8 +37,8 @@ public class AuthController {
 
     @GetMapping("/login")
     public String loginPage(@RequestParam(required = false) String error,
-            @RequestParam(required = false) String logout,
-            Model model) {
+                            @RequestParam(required = false) String logout,
+                            Model model) {
         if (error != null)
             model.addAttribute("errorMessage", "Invalid username/email or password.");
         if (logout != null)
@@ -55,9 +55,9 @@ public class AuthController {
 
     @PostMapping("/register")
     public String register(@Valid @ModelAttribute("registerDTO") RegisterDTO dto,
-            BindingResult result,
-            Model model,
-            RedirectAttributes redirectAttributes) {
+                           BindingResult result,
+                           Model model,
+                           RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             model.addAttribute("roles", User.UserRole.values());
             return "auth/register";
