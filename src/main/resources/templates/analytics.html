@@ -1,89 +1,89 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-    th:replace="~{layout :: layout(layout_content=~{::section})}">
+      th:replace="~{layout :: layout(layout_content=~{::section})}">
 
 <head>
     <title>Analytics — RevConnect</title>
 </head>
 
 <body>
-    <section>
-        <div class="container main-content" style="grid-template-columns: 1fr;">
-            <div style="max-width: 1000px; margin: 0 auto; width: 100%;">
-                <div style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;">
-                    <button onclick="history.back()" class="btn btn-ghost btn-sm" style="padding: 0.5rem;"
+<section>
+    <div class="container main-content" style="grid-template-columns: 1fr;">
+        <div style="max-width: 1000px; margin: 0 auto; width: 100%;">
+            <div style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+                <button onclick="history.back()" class="btn btn-ghost btn-sm" style="padding: 0.5rem;"
                         title="Go Back">
-                        <i data-lucide="arrow-left" style="width: 20px;"></i>
-                    </button>
-                    <h1 style="font-size: 1.5rem; margin: 0;">Analytics Dashboard</h1>
-                </div>
-                <!-- Account Metrics Cards -->
-                <div
+                    <i data-lucide="arrow-left" style="width: 20px;"></i>
+                </button>
+                <h1 style="font-size: 1.5rem; margin: 0;">Analytics Dashboard</h1>
+            </div>
+            <!-- Account Metrics Cards -->
+            <div
                     style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
-                    <div class="card text-center" style="border-top: 3px solid var(--primary);">
-                        <div class="stat-value text-primary" style="font-size: 2rem;"
-                            th:text="${metrics['totalPosts']}">0</div>
-                        <div class="stat-label">Total Posts</div>
-                    </div>
-                    <div class="card text-center" style="border-top: 3px solid var(--secondary);">
-                        <div class="stat-value text-secondary" style="font-size: 2rem;"
-                            th:text="${metrics['totalFollowers']}">0</div>
-                        <div class="stat-label">Followers</div>
-                    </div>
-                    <div class="card text-center" style="border-top: 3px solid var(--accent);">
-                        <div class="stat-value" style="font-size: 2rem; color: var(--accent);"
-                            th:text="${metrics['totalConnections']}">0</div>
-                        <div class="stat-label">Connections</div>
-                    </div>
-                    <div class="card text-center" style="border-top: 3px solid var(--info);">
-                        <div class="stat-value text-info" style="font-size: 2rem;"
-                            th:text="${metrics['totalFollowing']}">0</div>
-                        <div class="stat-label">Following</div>
-                    </div>
+                <div class="card text-center" style="border-top: 3px solid var(--primary);">
+                    <div class="stat-value text-primary" style="font-size: 2rem;"
+                         th:text="${metrics['totalPosts']}">0</div>
+                    <div class="stat-label">Total Posts</div>
+                </div>
+                <div class="card text-center" style="border-top: 3px solid var(--secondary);">
+                    <div class="stat-value text-secondary" style="font-size: 2rem;"
+                         th:text="${metrics['totalFollowers']}">0</div>
+                    <div class="stat-label">Followers</div>
+                </div>
+                <div class="card text-center" style="border-top: 3px solid var(--accent);">
+                    <div class="stat-value" style="font-size: 2rem; color: var(--accent);"
+                         th:text="${metrics['totalConnections']}">0</div>
+                    <div class="stat-label">Connections</div>
+                </div>
+                <div class="card text-center" style="border-top: 3px solid var(--info);">
+                    <div class="stat-value text-info" style="font-size: 2rem;"
+                         th:text="${metrics['totalFollowing']}">0</div>
+                    <div class="stat-label">Following</div>
+                </div>
+            </div>
+
+            <!-- Post Performance Table -->
+            <div class="card">
+                <h3 class="mb-4">Post Performance</h3>
+                <div th:if="${postAnalytics.empty}" class="text-center py-8 text-muted">
+                    No post data available yet.
                 </div>
 
-                <!-- Post Performance Table -->
-                <div class="card">
-                    <h3 class="mb-4">Post Performance</h3>
-                    <div th:if="${postAnalytics.empty}" class="text-center py-8 text-muted">
-                        No post data available yet.
-                    </div>
-
-                    <div style="overflow-x: auto;" th:if="${!postAnalytics.empty}">
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <thead>
-                                <tr style="border-bottom: 1px solid var(--border-color);">
-                                    <th style="padding: 1rem; text-align: left;" class="widget-title">Content</th>
-                                    <th style="padding: 1rem; text-align: center;" class="widget-title">Likes</th>
-                                    <th style="padding: 1rem; text-align: center;" class="widget-title">Comments</th>
-                                    <th style="padding: 1rem; text-align: center;" class="widget-title">Shares</th>
-                                    <th style="padding: 1rem; text-align: right;" class="widget-title">Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="pa : ${postAnalytics}"
-                                    style="border-bottom: 1px solid var(--border-color);">
-                                    <td style="padding: 1rem;">
-                                        <a th:href="@{'/posts/' + ${pa['postId']}}"
-                                            th:text="${pa['content'].length() > 60 ? pa['content'].substring(0,60) + '...' : pa['content']}"
-                                            class="font-bold hover:text-primary text-sm"></a>
-                                    </td>
-                                    <td style="padding: 1rem; text-align: center;" class="text-sm font-bold"
-                                        th:text="${pa['likes']}">0</td>
-                                    <td style="padding: 1rem; text-align: center;" class="text-sm font-bold"
-                                        th:text="${pa['comments']}">0</td>
-                                    <td style="padding: 1rem; text-align: center;" class="text-sm font-bold"
-                                        th:text="${pa['shares']}">0</td>
-                                    <td style="padding: 1rem; text-align: right;" class="text-xs text-muted"
-                                        th:text="${#temporals.format(pa['createdAt'],'dd MMM yyyy')}"></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                <div style="overflow-x: auto;" th:if="${!postAnalytics.empty}">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <th style="padding: 1rem; text-align: left;" class="widget-title">Content</th>
+                            <th style="padding: 1rem; text-align: center;" class="widget-title">Likes</th>
+                            <th style="padding: 1rem; text-align: center;" class="widget-title">Comments</th>
+                            <th style="padding: 1rem; text-align: center;" class="widget-title">Shares</th>
+                            <th style="padding: 1rem; text-align: right;" class="widget-title">Date</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="pa : ${postAnalytics}"
+                            style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 1rem;">
+                                <a th:href="@{'/posts/' + ${pa['postId']}}"
+                                   th:text="${pa['content'].length() > 60 ? pa['content'].substring(0,60) + '...' : pa['content']}"
+                                   class="font-bold hover:text-primary text-sm"></a>
+                            </td>
+                            <td style="padding: 1rem; text-align: center;" class="text-sm font-bold"
+                                th:text="${pa['likes']}">0</td>
+                            <td style="padding: 1rem; text-align: center;" class="text-sm font-bold"
+                                th:text="${pa['comments']}">0</td>
+                            <td style="padding: 1rem; text-align: center;" class="text-sm font-bold"
+                                th:text="${pa['shares']}">0</td>
+                            <td style="padding: 1rem; text-align: right;" class="text-xs text-muted"
+                                th:text="${#temporals.format(pa['createdAt'],'dd MMM yyyy')}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 </body>
 
 </html>
