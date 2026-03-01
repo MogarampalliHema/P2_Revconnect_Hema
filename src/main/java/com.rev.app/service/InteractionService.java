@@ -27,8 +27,8 @@ public class InteractionService {
     private final NotificationService notificationService;
 
     public InteractionService(LikeRepository likeRepository,
-            CommentRepository commentRepository,
-            NotificationService notificationService) {
+                              CommentRepository commentRepository,
+                              NotificationService notificationService) {
         this.likeRepository = likeRepository;
         this.commentRepository = commentRepository;
         this.notificationService = notificationService;
