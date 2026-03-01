@@ -5,8 +5,6 @@ import com.rev.app.entity.User;
 import com.rev.app.repository.PostRepository;
 import com.rev.app.repository.LikeRepository;
 import com.rev.app.repository.CommentRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,11 +25,11 @@ public class AnalyticsService {
     private final com.rev.app.repository.ConnectionRepository connectionRepository;
 
     public AnalyticsService(PostRepository postRepository,
-            LikeRepository likeRepository,
-            CommentRepository commentRepository,
-            FollowService followService,
-            UserService userService,
-            com.rev.app.repository.ConnectionRepository connectionRepository) {
+                            LikeRepository likeRepository,
+                            CommentRepository commentRepository,
+                            FollowService followService,
+                            UserService userService,
+                            com.rev.app.repository.ConnectionRepository connectionRepository) {
         this.postRepository = postRepository;
         this.likeRepository = likeRepository;
         this.commentRepository = commentRepository;
@@ -70,7 +68,7 @@ public class AnalyticsService {
         metrics.put("totalPosts", postRepository.countPublishedPostsByAuthor(userId));
         metrics.put("totalFollowers", followService.countFollowers(userId));
         metrics.put("totalFollowing", followService.countFollowing(userId));
-        metrics.put("totalConnections", connectionRepository.countConnections(user));
+        metrics.put("totalConnections", connectionRepository.countConnections(user.getId()));
         return metrics;
     }
 }
