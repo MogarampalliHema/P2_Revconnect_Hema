@@ -32,8 +32,8 @@ public class ProfileController {
     private String uploadDir;
 
     public ProfileController(UserService userService, PostService postService,
-            ConnectionService connectionService, FollowService followService,
-            NotificationService notificationService) {
+                             ConnectionService connectionService, FollowService followService,
+                             NotificationService notificationService) {
         this.userService = userService;
         this.postService = postService;
         this.connectionService = connectionService;
@@ -46,10 +46,49 @@ public class ProfileController {
         return viewProfile(userDetails.getUsername(), userDetails, model);
     }
 
+    @GetMapping("/{username}/followers")
+    public String viewFollowers(@PathVariable String username,
+                                @AuthenticationPrincipal UserDetails userDetails,
+                                Model model) {
+        User profileUser = userService.findByUsername(username);
+        User currentUser = userService.findByUsername(userDetails.getUsername());
+        model.addAttribute("title", username + "'s Followers");
+        model.addAttribute("users", followService.getFollowers(profileUser.getId()));
+        model.addAttribute("currentUser", currentUser);
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(currentUser.getId()));
+        return "user-list";
+    }
+
+    @GetMapping("/{username}/following")
+    public String viewFollowing(@PathVariable String username,
+                                @AuthenticationPrincipal UserDetails userDetails,
+                                Model model) {
+        User profileUser = userService.findByUsername(username);
+        User currentUser = userService.findByUsername(userDetails.getUsername());
+        model.addAttribute("title", "Following by " + username);
+        model.addAttribute("users", followService.getFollowing(profileUser.getId()));
+        model.addAttribute("currentUser", currentUser);
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(currentUser.getId()));
+        return "user-list";
+    }
+
+    @GetMapping("/{username}/network")
+    public String viewConnections(@PathVariable String username,
+                                  @AuthenticationPrincipal UserDetails userDetails,
+                                  Model model) {
+        User profileUser = userService.findByUsername(username);
+        User currentUser = userService.findByUsername(userDetails.getUsername());
+        model.addAttribute("title", username + "'s Network");
+        model.addAttribute("users", connectionService.getConnections(profileUser));
+        model.addAttribute("currentUser", currentUser);
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(currentUser.getId()));
+        return "user-list";
+    }
+
     @GetMapping("/{username}")
     public String viewProfile(@PathVariable String username,
-            @AuthenticationPrincipal UserDetails userDetails,
-            Model model) {
+                              @AuthenticationPrincipal UserDetails userDetails,
+                              Model model) {
         User profileUser = userService.findByUsername(username);
         User currentUser = userService.findByUsername(userDetails.getUsername());
 
@@ -98,8 +137,8 @@ public class ProfileController {
 
     @PostMapping("/edit")
     public String updateProfile(@AuthenticationPrincipal UserDetails userDetails,
-            @ModelAttribute ProfileUpdateDTO profileDTO,
-            RedirectAttributes redirectAttributes) {
+                                @ModelAttribute ProfileUpdateDTO profileDTO,
+                                RedirectAttributes redirectAttributes) {
         User currentUser = userService.findByUsername(userDetails.getUsername());
         userService.updateProfile(currentUser.getId(), profileDTO);
         redirectAttributes.addFlashAttribute("successMessage", "Profile updated!");
@@ -108,8 +147,8 @@ public class ProfileController {
 
     @PostMapping("/picture")
     public String uploadPicture(@AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam("file") MultipartFile file,
-            RedirectAttributes redirectAttributes) {
+                                @RequestParam("file") MultipartFile file,
+                                RedirectAttributes redirectAttributes) {
         try {
             User currentUser = userService.findByUsername(userDetails.getUsername());
             userService.uploadProfilePicture(currentUser.getId(), file, uploadDir);
@@ -122,8 +161,8 @@ public class ProfileController {
 
     @GetMapping("/search")
     public String searchUsers(@RequestParam String q,
-            @AuthenticationPrincipal UserDetails userDetails,
-            Model model) {
+                              @AuthenticationPrincipal UserDetails userDetails,
+                              Model model) {
         User currentUser = userService.findByUsername(userDetails.getUsername());
         model.addAttribute("results", userService.searchUsers(q));
         model.addAttribute("query", q);
@@ -134,10 +173,11 @@ public class ProfileController {
 
     @PostMapping("/delete")
     public String deleteAccount(@AuthenticationPrincipal UserDetails userDetails,
-            jakarta.servlet.http.HttpServletRequest request) {
+                                jakarta.servlet.http.HttpServletRequest request) {
         User currentUser = userService.findByUsername(userDetails.getUsername());
         userService.deleteUser(currentUser.getId());
         request.getSession().invalidate();
         return "redirect:/login?deleted";
     }
+
 }
