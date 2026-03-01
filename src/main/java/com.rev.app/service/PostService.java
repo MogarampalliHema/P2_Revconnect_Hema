@@ -31,8 +31,8 @@ public class PostService {
     private final com.rev.app.mapper.PostMapper postMapper;
 
     public PostService(PostRepository postRepository,
-            NotificationService notificationService,
-            com.rev.app.mapper.PostMapper postMapper) {
+                       NotificationService notificationService,
+                       com.rev.app.mapper.PostMapper postMapper) {
         this.postRepository = postRepository;
         this.notificationService = notificationService;
         this.postMapper = postMapper;
