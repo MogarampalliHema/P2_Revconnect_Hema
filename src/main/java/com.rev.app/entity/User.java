@@ -263,16 +263,16 @@ public class User {
         return posts;
     }
 
+    public List<Follow> getFollowing() {
+        return following;
+    }
+
     public List<Connection> getSentConnections() {
         return sentConnections;
     }
 
     public List<Connection> getReceivedConnections() {
         return receivedConnections;
-    }
-
-    public List<Follow> getFollowing() {
-        return following;
     }
 
     public List<Follow> getFollowers() {
@@ -289,5 +289,20 @@ public class User {
 
     public void setNotificationPreference(NotificationPreference notificationPreference) {
         this.notificationPreference = notificationPreference;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (!(o instanceof User))
+            return false;
+        User user = (User) o;
+        return id != null && id.equals(user.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }
