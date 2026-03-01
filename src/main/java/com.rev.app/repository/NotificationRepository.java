@@ -33,7 +33,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Transactional
     @Query("DELETE FROM Notification n WHERE n.referenceId = :refId AND n.type IN :types")
     void deleteByReferenceIdAndTypes(@Param("refId") Long refId,
-            @Param("types") List<Notification.NotificationType> types);
+                                     @Param("types") List<Notification.NotificationType> types);
 
     @Modifying
     @Transactional
