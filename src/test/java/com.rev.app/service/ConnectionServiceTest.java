@@ -1,5 +1,6 @@
 package com.rev.app.service;
 
+
 import com.rev.app.entity.Connection;
 import com.rev.app.entity.User;
 import com.rev.app.repository.ConnectionRepository;
@@ -118,7 +119,7 @@ public class ConnectionServiceTest {
         acceptedConn.setReceiver(bob);
         acceptedConn.setStatus(Connection.Status.ACCEPTED);
 
-        when(connectionRepository.findAcceptedConnections(alice))
+        when(connectionRepository.findAcceptedConnections(alice.getId()))
                 .thenReturn(Arrays.asList(acceptedConn));
 
         List<User> connections = connectionService.getConnections(alice);

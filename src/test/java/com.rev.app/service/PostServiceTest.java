@@ -1,5 +1,6 @@
 package com.rev.app.service;
 
+
 import com.rev.app.dto.PostDTO;
 import com.rev.app.entity.Post;
 import com.rev.app.entity.User;
@@ -62,11 +63,11 @@ public class PostServiceTest {
     }
 
     @Test
-    public void testCreatePost_Regular() {
+    public void testCreatePost_Regular() throws Exception {
         when(postMapper.toEntity(any(PostDTO.class), any(User.class))).thenReturn(testPost);
         when(postRepository.save(any(Post.class))).thenReturn(testPost);
 
-        Post result = postService.createPost(author, postDTO);
+        Post result = postService.createPost(author, postDTO, null);
 
         assertNotNull(result);
         assertEquals(Post.PostType.REGULAR, result.getPostType());
@@ -75,12 +76,12 @@ public class PostServiceTest {
     }
 
     @Test
-    public void testCreatePost_WithHashtags() {
+    public void testCreatePost_WithHashtags() throws Exception {
         postDTO.setHashtags("#spring, #java");
         when(postMapper.toEntity(any(PostDTO.class), any(User.class))).thenReturn(testPost);
         when(postRepository.save(any(Post.class))).thenReturn(testPost);
 
-        Post result = postService.createPost(author, postDTO);
+        Post result = postService.createPost(author, postDTO, null);
 
         assertNotNull(result);
         verify(postRepository).save(any(Post.class));

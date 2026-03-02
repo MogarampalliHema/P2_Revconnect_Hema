@@ -1,10 +1,12 @@
 package com.rev.app.service;
 
+
 import com.rev.app.entity.Post;
 import com.rev.app.entity.User;
 import com.rev.app.repository.CommentRepository;
 import com.rev.app.repository.LikeRepository;
 import com.rev.app.repository.PostRepository;
+import com.rev.app.repository.ConnectionRepository;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,6 +38,9 @@ public class AnalyticsServiceTest {
 
     @Mock
     private UserService userService;
+
+    @Mock
+    private ConnectionRepository connectionRepository;
 
     @InjectMocks
     private AnalyticsService analyticsService;
@@ -73,10 +78,11 @@ public class AnalyticsServiceTest {
 
     @Test
     public void testGetAccountMetrics() {
+        when(userService.findById(1L)).thenReturn(testUser);
         when(postRepository.countPublishedPostsByAuthor(1L)).thenReturn(10L);
         when(followService.countFollowers(1L)).thenReturn(100L);
         when(followService.countFollowing(1L)).thenReturn(50L);
-        when(userService.countFollowers(1L)).thenReturn(100L); // totalConnections in service calls this
+        when(connectionRepository.countConnections(1L)).thenReturn(100L);
 
         Map<String, Object> metrics = analyticsService.getAccountMetrics(1L);
 
