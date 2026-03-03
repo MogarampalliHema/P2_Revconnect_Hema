@@ -27,62 +27,25 @@ public class ProfileController {
     private final ConnectionService connectionService;
     private final FollowService followService;
     private final NotificationService notificationService;
+    private final BlockService blockService;
 
     @Value("${app.upload.dir}")
     private String uploadDir;
 
     public ProfileController(UserService userService, PostService postService,
                              ConnectionService connectionService, FollowService followService,
-                             NotificationService notificationService) {
+                             NotificationService notificationService, BlockService blockService) {
         this.userService = userService;
         this.postService = postService;
         this.connectionService = connectionService;
         this.followService = followService;
         this.notificationService = notificationService;
+        this.blockService = blockService;
     }
 
     @GetMapping
     public String myProfile(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         return viewProfile(userDetails.getUsername(), userDetails, model);
-    }
-
-    @GetMapping("/{username}/followers")
-    public String viewFollowers(@PathVariable String username,
-                                @AuthenticationPrincipal UserDetails userDetails,
-                                Model model) {
-        User profileUser = userService.findByUsername(username);
-        User currentUser = userService.findByUsername(userDetails.getUsername());
-        model.addAttribute("title", username + "'s Followers");
-        model.addAttribute("users", followService.getFollowers(profileUser.getId()));
-        model.addAttribute("currentUser", currentUser);
-        model.addAttribute("unreadCount", notificationService.getUnreadCount(currentUser.getId()));
-        return "user-list";
-    }
-
-    @GetMapping("/{username}/following")
-    public String viewFollowing(@PathVariable String username,
-                                @AuthenticationPrincipal UserDetails userDetails,
-                                Model model) {
-        User profileUser = userService.findByUsername(username);
-        User currentUser = userService.findByUsername(userDetails.getUsername());
-        model.addAttribute("title", "Following by " + username);
-        model.addAttribute("users", followService.getFollowing(profileUser.getId()));
-        model.addAttribute("currentUser", currentUser);
-        model.addAttribute("unreadCount", notificationService.getUnreadCount(currentUser.getId()));
-        return "user-list";
-    }
-
-    @GetMapping("/{username}/network")
-    public String viewConnections(@PathVariable String username,
-                                  @AuthenticationPrincipal UserDetails userDetails,
-                                  Model model) {
-        User profileUser = userService.findByUsername(username);
-        User currentUser = userService.findByUsername(userDetails.getUsername());
-        model.addAttribute("title", username + "'s Network");
-        model.addAttribute("users", connectionService.getConnections(profileUser));
-        model.addAttribute("currentUser", currentUser);
-        model.addAttribute("unreadCount", notificationService.getUnreadCount(currentUser.getId()));
-        return "user-list";
     }
 
     @GetMapping("/{username}")
@@ -97,9 +60,14 @@ public class ProfileController {
         boolean isFollowing = followService.isFollowing(currentUser.getId(), profileUser.getId());
         boolean hasPendingRequest = connectionService.hasPendingRequest(currentUser.getId(), profileUser.getId());
 
+        boolean hasBlocked = blockService.isBlocked(currentUser.getId(), profileUser.getId());
+        boolean isBlockedBy = blockService.isBlocked(profileUser.getId(), currentUser.getId());
+
         // Private profile visibility
-        boolean canViewPosts = isOwnProfile || profileUser.getPrivacySetting() == User.PrivacySetting.PUBLIC
-                || isConnected;
+        boolean canViewPosts = false;
+        if (!hasBlocked && !isBlockedBy) {
+            canViewPosts = isOwnProfile || profileUser.getPrivacySetting() == User.PrivacySetting.PUBLIC || isConnected;
+        }
 
         model.addAttribute("profileUser", profileUser);
         model.addAttribute("currentUser", currentUser);
@@ -108,12 +76,34 @@ public class ProfileController {
         model.addAttribute("isFollowing", isFollowing);
         model.addAttribute("hasPendingRequest", hasPendingRequest);
         model.addAttribute("canViewPosts", canViewPosts);
+        model.addAttribute("hasBlocked", hasBlocked);
+        model.addAttribute("isBlockedBy", isBlockedBy);
         model.addAttribute("posts", canViewPosts ? postService.getUserPosts(profileUser.getId()) : null);
         model.addAttribute("followerCount", followService.countFollowers(profileUser.getId()));
         model.addAttribute("followingCount", followService.countFollowing(profileUser.getId()));
         model.addAttribute("connectionCount", connectionService.getConnections(profileUser).size());
         model.addAttribute("unreadCount", notificationService.getUnreadCount(currentUser.getId()));
         return "profile";
+    }
+
+    @PostMapping("/{username}/block")
+    public String blockUser(@PathVariable String username, @AuthenticationPrincipal UserDetails userDetails,
+                            RedirectAttributes redirectAttributes) {
+        User profileUser = userService.findByUsername(username);
+        User currentUser = userService.findByUsername(userDetails.getUsername());
+        blockService.blockUser(currentUser.getId(), profileUser.getId());
+        redirectAttributes.addFlashAttribute("successMessage", "You have blocked " + profileUser.getUsername());
+        return "redirect:/profile/" + username;
+    }
+
+    @PostMapping("/{username}/unblock")
+    public String unblockUser(@PathVariable String username, @AuthenticationPrincipal UserDetails userDetails,
+                              RedirectAttributes redirectAttributes) {
+        User profileUser = userService.findByUsername(username);
+        User currentUser = userService.findByUsername(userDetails.getUsername());
+        blockService.unblockUser(currentUser.getId(), profileUser.getId());
+        redirectAttributes.addFlashAttribute("successMessage", "You have unblocked " + profileUser.getUsername());
+        return "redirect:/profile/" + username;
     }
 
     @GetMapping("/edit")
@@ -179,5 +169,4 @@ public class ProfileController {
         request.getSession().invalidate();
         return "redirect:/login?deleted";
     }
-
 }
