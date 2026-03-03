@@ -52,14 +52,14 @@ public class WebSecurityConfig {
         @Order(1)
         public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
                 http
-                                .securityMatcher("/api/**")
-                                .csrf(csrf -> csrf.disable())
-                                .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers("/api/auth/**").permitAll()
-                                                .anyRequest().authenticated())
-                                .sessionManagement(session -> session
-                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+                        .securityMatcher("/api/**")
+                        .csrf(csrf -> csrf.disable())
+                        .authorizeHttpRequests(auth -> auth
+                                .requestMatchers("/api/auth/**").permitAll()
+                                .anyRequest().authenticated())
+                        .sessionManagement(session -> session
+                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                        .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
                 return http.build();
         }
@@ -68,33 +68,34 @@ public class WebSecurityConfig {
         @Bean
         public SecurityFilterChain webFilterChain(HttpSecurity http) throws Exception {
                 http
-                                .authenticationProvider(authenticationProvider())
-                                .authorizeHttpRequests(auth -> auth
-                                                // Public pages
-                                                .requestMatchers("/", "/login", "/register", "/css/**", "/js/**",
-                                                                "/images/**", "/uploads/**", "/h2-console/**", "/error")
-                                                .permitAll()
-                                                // All authenticated users can access all other pages
-                                                .anyRequest().authenticated())
-                                .formLogin(form -> form
-                                                .loginPage("/login")
-                                                .loginProcessingUrl("/login")
-                                                .usernameParameter("usernameOrEmail")
-                                                .passwordParameter("password")
-                                                .defaultSuccessUrl("/feed", true)
-                                                .failureUrl("/login?error")
-                                                .permitAll())
-                                .logout(logout -> logout
-                                                .logoutUrl("/logout")
-                                                .logoutSuccessUrl("/login?logout=true")
-                                                .invalidateHttpSession(true)
-                                                .clearAuthentication(true)
-                                                .permitAll())
-                                .csrf(csrf -> csrf
-                                                .ignoringRequestMatchers("/h2-console/**"))
-                                .headers(headers -> headers
-                                                .frameOptions(frame -> frame.sameOrigin()) // for H2 console
-                                );
+                        .authenticationProvider(authenticationProvider())
+                        .authorizeHttpRequests(auth -> auth
+                                // Public pages
+                                .requestMatchers("/", "/login", "/register", "/forgot-password/**",
+                                        "/css/**", "/js/**",
+                                        "/images/**", "/uploads/**", "/h2-console/**", "/error")
+                                .permitAll()
+                                // All authenticated users can access all other pages
+                                .anyRequest().authenticated())
+                        .formLogin(form -> form
+                                .loginPage("/login")
+                                .loginProcessingUrl("/login")
+                                .usernameParameter("usernameOrEmail")
+                                .passwordParameter("password")
+                                .defaultSuccessUrl("/feed", true)
+                                .failureUrl("/login?error")
+                                .permitAll())
+                        .logout(logout -> logout
+                                .logoutUrl("/logout")
+                                .logoutSuccessUrl("/login?logout=true")
+                                .invalidateHttpSession(true)
+                                .clearAuthentication(true)
+                                .permitAll())
+                        .csrf(csrf -> csrf
+                                .ignoringRequestMatchers("/h2-console/**"))
+                        .headers(headers -> headers
+                                .frameOptions(frame -> frame.sameOrigin()) // for H2 console
+                        );
 
                 return http.build();
         }
