@@ -22,7 +22,7 @@ RevConnect is a high-performance Monolithic Web Application designed for profess
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 - **Backend**: Java 17+, Spring Boot 3.x, Spring Security, Spring Data JPA
 - **Database**: Oracle SQL (Primary), JDBC, Hibernate ORM
@@ -32,7 +32,7 @@ RevConnect is a high-performance Monolithic Web Application designed for profess
 
 ---
 
-## 📊 Database Schema (ERD)
+##  Database Schema (ERD)
 
 Below is the entity-relationship diagram representing the core data model of RevConnect.
 
@@ -118,7 +118,7 @@ erDiagram
 
 ---
 
-## ⚙️ Setup & Installation
+## Setup & Installation
 
 ### Prerequisites
 - JDK 17 or higher
@@ -140,7 +140,7 @@ spring.datasource.password=YOUR_PASSWORD
    ```bash
    mvn spring-boot:run
    ```
-4. Access the application at: `http://localhost:8097`
+4. Access the application at: `http://localhost:8080`
 
 ---
 
