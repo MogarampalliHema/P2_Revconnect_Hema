@@ -5,7 +5,6 @@ import com.rev.app.entity.Post;
 import com.rev.app.entity.User;
 import com.rev.app.exception.AccessDeniedException;
 import com.rev.app.exception.ResourceNotFoundException;
-import com.rev.app.dto.PostSummaryProjection;
 import com.rev.app.repository.PostRepository;
 import com.rev.app.repository.PostSpecification;
 import org.apache.logging.log4j.LogManager;
@@ -83,9 +82,6 @@ public class PostService {
         if (!post.getAuthor().getId().equals(currentUserId)) {
             throw new AccessDeniedException("You can only delete your own posts.");
         }
-        // Clean up logical references in notifications
-        notificationService.deletePostNotifications(postId);
-
         postRepository.delete(post);
         logger.info("Post {} deleted by user {}", postId, currentUserId);
     }
@@ -123,7 +119,7 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public List<PostSummaryProjection> searchByHashtag(String hashtag) {
+    public List<Post> searchByHashtag(String hashtag) {
         return postRepository.findByHashtag(hashtag);
     }
 
@@ -162,5 +158,10 @@ public class PostService {
     @Transactional(readOnly = true)
     public long countPostsByAuthor(Long authorId) {
         return postRepository.countPublishedPostsByAuthor(authorId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Post> getShares(Long originalPostId) {
+        return postRepository.findByOriginalPostId(originalPostId);
     }
 }
