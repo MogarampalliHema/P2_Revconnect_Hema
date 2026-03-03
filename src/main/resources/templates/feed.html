@@ -177,12 +177,22 @@
             </div>
             <!-- ===== END POST CREATION FORM ===== -->
 
-            <div th:if="${posts == null or posts.empty}" class="card text-center py-16">
+            <div th:if="${posts == null || posts.isEmpty()}" class="card text-center py-16"
+                 style="margin-top: 1rem;">
                 <i data-lucide="sparkles" class="icon-lavender mx-auto mb-4" style="width: 40px; height: 40px;"></i>
-                <p class="text-secondary">Be the first to start a conversation.</p>
+                <p class="text-secondary font-bold">Your feed is quiet. Start the conversation!</p>
             </div>
 
-            <div th:each="post : ${posts}" class="card mb-6 post shadow-sm">
+            <div th:each="post : ${posts}" class="card mb-6 post shadow-sm" style="position: relative;">
+                <!-- Repost Indicator -->
+                <div th:if="${post.postType != null && post.postType.name() == 'REPOST'}"
+                     class="repost-header flex items-center gap-2 mb-2"
+                     style="padding: 0.75rem 1.5rem 0; margin-bottom: -0.5rem; font-size: 0.825rem; font-weight: 600; color: var(--text-secondary);">
+                    <i data-lucide="repeat" class="icon-primary"
+                       style="width: 15px; height: 15px; margin-left: 2rem;"></i>
+                    <span th:text="${(post.author.fullName ?: post.author.username) + ' reposted'}"></span>
+                </div>
+
                 <div class="post-header">
                     <div class="avatar" style="width: 44px; height: 44px;">
                         <img th:if="${post.author.profilePicture != null && !post.author.profilePicture.isEmpty()}"
@@ -202,14 +212,22 @@
                     <div th:if="${post.author.id == currentUser.id}" style="margin-left: auto;">
                         <form th:action="@{'/posts/' + ${post.id} + '/delete'}" method="post"
                               onsubmit="return confirm('Delete this post?');">
-                            <button type="submit" class="btn btn-ghost btn-sm"
-                                    style="color: var(--text-muted); opacity: 0.6; padding: 0.4rem; border-radius: 50%;">
+                            <button type="submit" class="btn btn-ghost btn-sm text-danger"
+                                    style="padding: 0.5rem; border-radius: 8px; display: flex; align-items: center; gap: 0.25rem;"
+                                    title="Delete Post">
                                 <i data-lucide="trash-2" style="width: 16px;"></i>
                             </button>
                         </form>
                     </div>
                 </div>
 
+
+                <div th:if="${post.originalPost != null}"
+                     style="padding: 0 1.5rem 0.5rem; font-size: 0.85rem; color: var(--text-secondary); margin-left: 2rem;">
+                    Original by <a th:href="@{'/profile/' + ${post.originalPost.author.username}}"
+                                   style="color: var(--primary); font-weight: 600; text-decoration: none;"
+                                   th:text="'@' + ${post.originalPost.author.username}">@user</a>
+                </div>
                 <div class="post-content" th:text="${post.content}"></div>
 
                 <!-- Post Image Display -->
@@ -234,7 +252,9 @@
                               style="display: inline-block;">
                             <button type="submit" class="btn btn-ghost btn-sm"
                                     style="padding: 0.4rem; border-radius: 50%;">
-                                <i data-lucide="heart" class="icon-peach" style="width: 20px;"></i>
+                                <i data-lucide="heart"
+                                   th:class="${post.isLikedByUser(currentUser.id) ? 'liked-heart' : 'icon-peach'}"
+                                   style="width: 20px;"></i>
                             </button>
                         </form>
                         <span class="text-xs font-bold hover:underline" style="cursor: pointer;"
@@ -247,7 +267,9 @@
                            style="padding: 0.4rem; border-radius: 50%;">
                             <i data-lucide="message-circle" class="icon-sky" style="width: 20px;"></i>
                         </a>
-                        <span class="text-xs font-bold" th:text="${post.comments.size()}">0</span>
+                        <span class="text-xs font-bold hover:underline" style="cursor: pointer;"
+                              th:onclick="'openModal(\'' + @{'/feed/post/' + ${post.id} + '/comments'} + '\')'"
+                              th:text="${post.comments.size()}">0</span>
                     </div>
 
                     <div class="flex items-center gap-1" style="color: var(--text-secondary); margin-left: auto;">
@@ -255,7 +277,7 @@
                               style="display: inline-block;">
                             <button type="submit" class="btn btn-ghost btn-sm"
                                     style="padding: 0.4rem; border-radius: 50%;">
-                                <i data-lucide="share-2" class="icon-mint" style="width: 20px;"></i>
+                                <i data-lucide="repeat" class="icon-mint" style="width: 20px;"></i>
                             </button>
                         </form>
                         <span class="text-xs font-bold hover:underline" style="cursor: pointer;"
