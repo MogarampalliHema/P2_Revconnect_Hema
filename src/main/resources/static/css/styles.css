@@ -408,6 +408,31 @@ h6 {
   transform: translateY(-1px);
 }
 
+.form-control-password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  transition: var(--transition-fast);
+  z-index: 10;
+}
+
+.password-toggle:hover {
+  color: var(--primary);
+}
+
 /* Alerts */
 .alert {
   padding: 1rem 1.5rem;
@@ -491,6 +516,26 @@ h6 {
 
 .icon-peach {
   color: var(--secondary);
+}
+
+.liked-heart {
+  color: #EF4444 !important;
+  fill: #EF4444 !important;
+  animation: heartPop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes heartPop {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.25);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* ---------- App Layout ---------- */
@@ -1027,3 +1072,9 @@ h6 {
   height: 28px;
   font-size: 0.7rem;
 }
+/* Hide Edge browser default password reveal icon */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none;
+}
+
