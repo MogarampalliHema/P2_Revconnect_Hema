@@ -9,7 +9,7 @@
     <link
             href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Inter:wght@300;400;500&display=swap"
             rel="stylesheet" />
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script th:src="@{/js/lucide.min.js}"></script>
     <link th:href="@{/css/styles.css}" rel="stylesheet" />
 </head>
 
@@ -66,11 +66,32 @@
 
         <div class="form-group">
             <label class="form-label" for="password">Password <span style="color:var(--danger);">*</span></label>
-            <input type="password" id="password" th:field="*{password}" class="form-control"
-                   placeholder="Minimum 6 characters" required minlength="6" />
+            <div class="form-control-password-wrapper">
+                <input type="password" id="password" th:field="*{password}" class="form-control"
+                       placeholder="Minimum 6 characters" required minlength="6" style="padding-right: 3rem;" />
+                <button type="button" class="password-toggle" onclick="togglePasswordVisibility('password')">
+                    <i data-lucide="eye" style="width: 18px;"></i>
+                </button>
+            </div>
             <small class="text-muted text-xs" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"
                    style="color: var(--danger);"></small>
         </div>
+
+        <script>
+            function togglePasswordVisibility(id) {
+                const input = document.getElementById(id);
+                const wrapper = input.nextElementSibling;
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    wrapper.innerHTML = '<i data-lucide="eye-off" style="width: 18px;"></i>';
+                } else {
+                    input.type = 'password';
+                    wrapper.innerHTML = '<i data-lucide="eye" style="width: 18px;"></i>';
+                }
+                if (window.lucide) window.lucide.createIcons();
+            }
+        </script>
+
 
         <div class="form-group">
             <label class="form-label" for="role">Account Type</label>
