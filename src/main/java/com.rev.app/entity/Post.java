@@ -214,4 +214,10 @@ public class Post {
     public int getShareCount() {
         return shares != null ? shares.size() : 0;
     }
+
+    public boolean isLikedByUser(Long userId) {
+        if (likes == null || userId == null)
+            return false;
+        return likes.stream().anyMatch(l -> l.getUser().getId().equals(userId));
+    }
 }
