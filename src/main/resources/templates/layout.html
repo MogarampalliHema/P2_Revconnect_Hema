@@ -12,7 +12,69 @@
           href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
           rel="stylesheet" />
 
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Lucide icons: Using local script ONLY for maximum reliability -->
+  <script th:src="@{/js/lucide.min.js}"></script>
+
+  <style>
+    /* Prevent icon collapse and ensure visibility */
+    [data-lucide],
+    .lucide {
+      width: 20px !important;
+      height: 20px !important;
+      display: inline-flex !important;
+      align-items: center;
+      justify-content: center;
+      stroke-width: 2;
+      vertical-align: middle;
+      min-width: 20px;
+      min-height: 20px;
+    }
+  </style>
+
+  <script>
+    // MutationObserver: fixed to avoid infinite loops
+    let isHydrating = false;
+    const iconObserver = new MutationObserver((mutations) => {
+      if (isHydrating || !window.lucide) return;
+
+      let hasNewIcons = false;
+      for (const m of mutations) {
+        for (const node of m.addedNodes) {
+          if (node.nodeType === 1 && (node.hasAttribute('data-lucide') || node.querySelector('[data-lucide]'))) {
+            hasNewIcons = true;
+            break;
+          }
+        }
+        if (hasNewIcons) break;
+      }
+
+      if (hasNewIcons) {
+        isHydrating = true;
+        lucide.createIcons();
+        setTimeout(() => { isHydrating = false; }, 100); // Small debounce
+      }
+    });
+
+    function initIcons() {
+      if (window.lucide) {
+        lucide.createIcons();
+        iconObserver.observe(document.body, { childList: true, subtree: true });
+        console.log("Lucide: Observer active.");
+      } else {
+        console.warn("Lucide: Script not loaded yet.");
+      }
+    }
+
+    // Try to init as soon as possible
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', initIcons);
+    } else {
+      initIcons();
+    }
+
+    // Safety fallback
+    window.addEventListener('load', () => { if (window.lucide) lucide.createIcons(); });
+  </script>
   <link th:href="@{/css/styles.css}" rel="stylesheet" />
   <th:block th:fragment="head-extra"></th:block>
 </head>
@@ -27,7 +89,16 @@
        style="display: flex; align-items: center; gap: 0.75rem; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.03em;">
       <div
               style="background: var(--primary-gradient); padding: 6px; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px var(--primary-glow);">
-        <i data-lucide="sparkles" style="width: 20px; color: white;"></i>
+        <!-- Hardcoded SVG as a verification test - this should ALWAYS show if SVG rendering works -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles">
+          <path
+                  d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+          <path d="M5 3v4" />
+          <path d="M19 17v4" />
+          <path d="M3 5h4" />
+          <path d="M17 19h4" />
+        </svg>
       </div>
       <span class="text-gradient">RevConnect</span>
     </a>
@@ -38,7 +109,12 @@
       <a th:href="@{/messages}" class="nav-link" style="font-weight: 500; font-size: 0.9rem;">Talk</a>
       <a th:href="@{/connections}" class="nav-link" style="font-weight: 500; font-size: 0.9rem;">Network</a>
       <a th:href="@{/notifications}" class="nav-link" style="position: relative; display: flex; align-items: center;">
-        <i data-lucide="bell" style="width: 20px;"></i>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             class="lucide lucide-bell">
+          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+        </svg>
         <span class="badge" th:if="${unreadCount != null && unreadCount > 0}" th:text="${unreadCount}"
               style="position: absolute; top: -4px; right: -4px; background: var(--danger); color: white; border: 2px solid var(--bg-surface);"></span>
       </a>
@@ -57,7 +133,13 @@
         <form th:action="@{/logout}" method="post" style="margin: 0; display: flex;">
           <button type="submit" class="btn-ghost"
                   style="padding: 0.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: all 0.2s ease;">
-            <i data-lucide="log-out" style="width: 20px;"></i>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                 class="lucide lucide-log-out">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" x2="9" y1="12" y2="12" />
+            </svg>
           </button>
         </form>
       </div>
@@ -79,8 +161,9 @@
 </div>
 
 <!-- CONTENT INJECTION -->
-<main class="page-entry-animate">
-  <div th:replace="${layout_content}"></div>
+<main class="page-entry-animate" style="min-height: 50vh;">
+  <!-- If you see this but not the page, the fragment injection is failing -->
+  <th:block th:replace="${layout_content} ?: ~{}"></th:block>
 </main>
 
 <style>
@@ -162,8 +245,6 @@
 </style>
 
 <script>
-  lucide.createIcons();
-
   function openModal(url) {
     if (!url) {
       console.error("No URL provided to openModal");
@@ -235,6 +316,7 @@
     if (e.target.id === 'genericModal') closeModal();
   });
 </script>
+
 <script th:src="@{/js/main.js}"></script>
 </body>
 
