@@ -69,7 +69,7 @@ public class PostRepositoryTest {
         postRepository.save(post2);
 
         List<Post> latest = postRepository.findAll(); // Assuming findLatestByActiveTrueOrderByCreatedAtDesc is common
-                                                      // or similar
+        // or similar
         assertThat(latest).hasSize(2);
     }
 }
