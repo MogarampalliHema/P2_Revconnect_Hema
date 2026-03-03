@@ -59,6 +59,11 @@ public class InteractionService {
         return likeRepository.countByPostId(postId);
     }
 
+    @Transactional(readOnly = true)
+    public List<Like> getLikesByPostId(Long postId) {
+        return likeRepository.findByPostId(postId);
+    }
+
     // ========== COMMENTS ==========
 
     public Comment addComment(Post post, User author, CommentDTO dto) {
@@ -79,6 +84,7 @@ public class InteractionService {
             throw new AccessDeniedException("You are not authorized to delete this comment.");
         }
         commentRepository.delete(comment);
+        logger.info("Comment {} deleted by user {}", commentId, currentUserId);
     }
 
     @Transactional(readOnly = true)
