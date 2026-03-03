@@ -16,6 +16,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import com.rev.app.entity.Like;
+import com.rev.app.entity.Comment;
 
 @Controller
 @RequestMapping("/feed")
@@ -28,38 +31,58 @@ public class FeedController {
     private final ConnectionService connectionService;
     private final FollowService followService;
     private final NotificationService notificationService;
+    private final InteractionService interactionService;
+    private final BlockService blockService;
 
     public FeedController(PostService postService, UserService userService,
-            ConnectionService connectionService, FollowService followService,
-            NotificationService notificationService) {
+                          ConnectionService connectionService, FollowService followService,
+                          NotificationService notificationService,
+                          InteractionService interactionService, BlockService blockService) {
         this.postService = postService;
         this.userService = userService;
         this.connectionService = connectionService;
         this.followService = followService;
         this.notificationService = notificationService;
+        this.interactionService = interactionService;
+        this.blockService = blockService;
     }
 
     @GetMapping
     public String feed(@AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(required = false) String hashtag,
-            @RequestParam(required = false) String type,
-            Model model) {
+                       @RequestParam(defaultValue = "0") int page,
+                       @RequestParam(required = false) String hashtag,
+                       @RequestParam(required = false) String type,
+                       Model model) {
         User currentUser = userService.findByUsername(userDetails.getUsername());
+        logger.info("FeedController: Loading feed for user: {}", currentUser.getUsername());
 
         // Build user ID list: own + connections + following
         List<Long> feedUserIds = new ArrayList<>();
         feedUserIds.add(currentUser.getId());
-        feedUserIds.addAll(connectionService.getConnectionIds(currentUser));
-        feedUserIds.addAll(followService.getFollowedIds(currentUser.getId()));
+
+        List<Long> connectionIds = connectionService.getConnectionIds(currentUser);
+        logger.debug("FeedController: Found {} connections", connectionIds.size());
+        feedUserIds.addAll(connectionIds);
+
+        List<Long> followedIds = followService.getFollowedIds(currentUser.getId());
+        logger.debug("FeedController: Found {} follows", followedIds.size());
+        feedUserIds.addAll(followedIds);
+
+        List<Long> excludedUserIds = blockService.getExcludedUserIds(currentUser.getId());
+        logger.debug("FeedController: Found {} blocks", excludedUserIds.size());
+        feedUserIds.removeAll(excludedUserIds);
 
         List<Post> posts;
         if (hashtag != null && !hashtag.isBlank()) {
-            posts = postService.filterPosts(null, hashtag);
+            posts = postService.filterPosts(null, hashtag).stream()
+                    .filter(post -> !excludedUserIds.contains(post.getAuthor().getId()))
+                    .collect(Collectors.toList());
         } else if (type != null && !type.isBlank()) {
             try {
                 Post.PostType postType = Post.PostType.valueOf(type.toUpperCase());
-                posts = postService.filterPosts(postType, null);
+                posts = postService.filterPosts(postType, null).stream()
+                        .filter(post -> !excludedUserIds.contains(post.getAuthor().getId()))
+                        .collect(Collectors.toList());
             } catch (IllegalArgumentException e) {
                 posts = postService.getFeed(feedUserIds, page, 10).getContent();
             }
@@ -70,21 +93,26 @@ public class FeedController {
             model.addAttribute("currentPage", page);
         }
 
+        List<Post> trendingPosts = postService.getTrendingPosts(0).getContent().stream()
+                .filter(post -> !excludedUserIds.contains(post.getAuthor().getId()))
+                .collect(Collectors.toList());
+
         model.addAttribute("posts", posts);
         model.addAttribute("currentUser", currentUser);
         model.addAttribute("newPost", new PostDTO());
         model.addAttribute("unreadCount", notificationService.getUnreadCount(currentUser.getId()));
         model.addAttribute("connectionCount", connectionService.getConnections(currentUser).size());
-        model.addAttribute("followerCount", followService.countFollowing(currentUser.getId()));
-        model.addAttribute("trending", postService.getTrendingPosts(0).getContent());
+        model.addAttribute("followerCount", followService.countFollowers(currentUser.getId()));
+        model.addAttribute("followingCount", followService.countFollowing(currentUser.getId()));
+        model.addAttribute("trending", trendingPosts);
         return "feed";
     }
 
     @PostMapping("/post")
     public String createPost(@AuthenticationPrincipal UserDetails userDetails,
-            @ModelAttribute PostDTO postDTO,
-            @RequestParam(value = "image", required = false) org.springframework.web.multipart.MultipartFile image,
-            RedirectAttributes redirectAttributes) {
+                             @ModelAttribute PostDTO postDTO,
+                             @RequestParam(value = "image", required = false) org.springframework.web.multipart.MultipartFile image,
+                             RedirectAttributes redirectAttributes) {
         User currentUser = userService.findByUsername(userDetails.getUsername());
 
         logger.info("Controller: Received post request from user: {}", currentUser.getUsername());
@@ -100,5 +128,39 @@ public class FeedController {
             redirectAttributes.addFlashAttribute("errorMessage", "Failed to upload image.");
         }
         return "redirect:/feed";
+    }
+
+    @GetMapping("/post/{id}/likes")
+    public String getPostLikes(@PathVariable Long id, Model model) {
+        logger.info("Fetching likes for post id from feed: {}", id);
+        List<User> users = interactionService.getLikesByPostId(id).stream()
+                .map(Like::getUser)
+                .collect(Collectors.toList());
+        model.addAttribute("users", users);
+        model.addAttribute("title", "Liked by");
+        return "fragments/user-list :: userList";
+    }
+
+    @GetMapping("/post/{id}/shares")
+    public String getPostShares(@PathVariable Long id, Model model) {
+        logger.info("Fetching shares for post id from feed: {}", id);
+        List<User> users = postService.getShares(id).stream()
+                .map(Post::getAuthor)
+                .collect(Collectors.toList());
+        model.addAttribute("users", users);
+        model.addAttribute("title", "Reposted by");
+        return "fragments/user-list :: userList";
+    }
+
+    @GetMapping("/post/{id}/comments")
+    public String getPostComments(@PathVariable Long id, Model model) {
+        logger.info("Fetching commenters for post id from feed: {}", id);
+        List<User> users = interactionService.getComments(id).stream()
+                .map(Comment::getAuthor)
+                .distinct()
+                .collect(Collectors.toList());
+        model.addAttribute("users", users);
+        model.addAttribute("title", "Commented by");
+        return "fragments/user-list :: userList";
     }
 }
