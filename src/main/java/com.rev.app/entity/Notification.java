@@ -46,7 +46,8 @@ public class Notification {
         POST_LIKED,
         POST_COMMENTED,
         POST_SHARED,
-        MENTION
+        MENTION,
+        MESSAGE_RECEIVED
     }
 
     // Constructors
