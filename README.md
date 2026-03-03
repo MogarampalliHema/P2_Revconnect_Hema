@@ -2,7 +2,7 @@
 
 RevConnect is a high-performance Monolithic Web Application designed for professional networking and community engagement. Inspired by modern social platforms, it features a unique "Pastel Haven" aesthetic combined with robust enterprise-grade security and analytics.
 
-## 🚀 Key Features
+ Key Features
 
 - **Advanced Authentication**: Secure login and registration using BCrypt password encryption, supporting both Session-based (Web) and JWT-based (REST API) authentication.
 - **Professional Networking**: 
@@ -144,11 +144,11 @@ spring.datasource.password=YOUR_PASSWORD
 
 ---
 
-## 🧪 Testing
+##  Testing
 The project includes a comprehensive suite of unit and integration tests. Run tests using:
 ```bash
 mvn test
 ```
 
-## 📜 License
-This project is developed as part of the P2 RevConnect initiative.
+
+ 
