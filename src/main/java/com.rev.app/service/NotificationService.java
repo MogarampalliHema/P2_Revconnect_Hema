@@ -36,6 +36,7 @@ public class NotificationService {
                     case POST_LIKED -> pref.isPostLikes();
                     case POST_COMMENTED -> pref.isPostComments();
                     case POST_SHARED -> pref.isPostShares();
+                    case MESSAGE_RECEIVED -> true; // Messages always notify for now
                     default -> true;
                 })
                 .orElse(true);
@@ -83,6 +84,11 @@ public class NotificationService {
                 sharer.getUsername() + " shared your post.", postId);
     }
 
+    public void notifyMessageReceived(User recipient, User sender) {
+        create(recipient, sender, Notification.NotificationType.MESSAGE_RECEIVED,
+                "New message from " + sender.getUsername(), sender.getId());
+    }
+
     @Transactional(readOnly = true)
     public List<Notification> getNotifications(Long userId) {
         return notificationRepository.findByRecipientIdOrderByCreatedAtDesc(userId);
@@ -103,13 +109,6 @@ public class NotificationService {
 
     public void deleteNotification(Long notificationId) {
         notificationRepository.deleteById(notificationId);
-    }
-
-    public void deletePostNotifications(Long postId) {
-        notificationRepository.deleteByReferenceIdAndTypes(postId, List.of(
-                Notification.NotificationType.POST_LIKED,
-                Notification.NotificationType.POST_COMMENTED,
-                Notification.NotificationType.POST_SHARED));
     }
 
     public void clearAllNotifications(Long userId) {
