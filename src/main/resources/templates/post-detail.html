@@ -1,165 +1,178 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-    th:replace="~{layout :: layout(layout_content=~{::section})}">
+      th:replace="~{layout :: layout(layout_content=~{::section})}">
 
 <head>
     <title>Post Details — RevConnect</title>
 </head>
 
 <body>
-    <section>
-        <div class="container main-content" style="grid-template-columns: 1fr;">
-            <div style="max-width: 800px; margin: 0 auto; width: 100%;">
-                <button onclick="history.back()" class="btn btn-ghost btn-sm mb-4" style="padding: 0.5rem;"
+<section>
+    <div class="container main-content" style="grid-template-columns: 1fr;">
+        <div style="max-width: 800px; margin: 0 auto; width: 100%;">
+            <button onclick="history.back()" class="btn btn-ghost btn-sm mb-4" style="padding: 0.5rem;"
                     title="Go Back">
-                    <i data-lucide="arrow-left" style="width: 18px;"></i>
-                    <span>Back</span>
-                </button>
+                <i data-lucide="arrow-left" style="width: 18px;"></i>
+                <span>Back</span>
+            </button>
 
-                <!-- Main Post -->
-                <div class="card mb-6 post">
-                    <div th:if="${post.postType.name() == 'REPOST'}"
-                        class="text-xs text-primary mb-3 flex items-center gap-1">
-                        <i data-lucide="repeat" style="width: 14px;"></i>
-                        <span>Reposted from <a th:href="@{'/profile/' + ${post.originalPost?.author?.username}}"
-                                th:text="'@' + ${post.originalPost?.author?.username}" class="font-bold"></a></span>
+            <!-- Main Post -->
+            <div class="card mb-6 post">
+                <div th:if="${post.postType.name() == 'REPOST'}"
+                     class="text-xs text-primary mb-3 flex items-center gap-1">
+                    <i data-lucide="repeat" style="width: 14px;"></i>
+                    <span>Reposted from <a th:href="@{'/profile/' + ${post.originalPost?.author?.username}}"
+                                           th:text="'@' + ${post.originalPost?.author?.username}" class="font-bold"></a></span>
+                </div>
+
+                <div class="post-header">
+                    <div class="avatar" style="overflow: hidden;">
+                        <img th:if="${post.author.profilePicture != null && !post.author.profilePicture.isEmpty()}"
+                             th:src="@{${post.author.profilePicture}}"
+                             style="width: 100%; height: 100%; object-fit: cover;" alt="" />
+                        <span th:if="${post.author.profilePicture == null || post.author.profilePicture.isEmpty()}"
+                              th:text="${post.author.username.substring(0,1).toUpperCase()}"
+                              style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--primary-gradient); color: white;"></span>
                     </div>
-
-                    <div class="post-header">
-                        <div class="avatar" style="overflow: hidden;">
-                            <img th:if="${post.author.profilePicture != null && !post.author.profilePicture.isEmpty()}"
-                                th:src="@{${post.author.profilePicture}}"
-                                style="width: 100%; height: 100%; object-fit: cover;" alt="" />
-                            <span th:if="${post.author.profilePicture == null || post.author.profilePicture.isEmpty()}"
-                                th:text="${post.author.username.substring(0,1).toUpperCase()}"
-                                style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--primary-gradient); color: white;"></span>
-                        </div>
-                        <div class="post-author">
-                            <a th:href="@{'/profile/' + ${post.author.username}}"
-                                class="author-name hover:text-primary">
-                                <span th:text="${post.author.fullName ?: post.author.username}"></span>
-                                <span th:if="${post.author.role.name() != 'PERSONAL'}" class="badge ml-2"
-                                    th:text="${post.author.role}"></span>
-                            </a>
-                            <span class="post-time"
-                                th:text="${#temporals.format(post.createdAt,'dd MMM yyyy, HH:mm')}"></span>
-                        </div>
-                        <div th:if="${post.author.id == currentUser.id}" style="margin-left: auto;" class="flex gap-2">
-                            <a th:href="@{'/posts/' + ${post.id} + '/edit'}" class="btn btn-ghost btn-sm">
-                                <i data-lucide="edit-2" style="width: 16px;"></i>
-                            </a>
-                            <form th:action="@{'/posts/' + ${post.id} + '/delete'}" method="post"
-                                onsubmit="return confirm('Delete this post?');">
-                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                                <button type="submit" class="btn btn-ghost btn-sm" style="color: var(--danger);">
-                                    <i data-lucide="trash-2" style="width: 16px;"></i>
-                                </button>
-                            </form>
-                        </div>
+                    <div class="post-author">
+                        <a th:href="@{'/profile/' + ${post.author.username}}"
+                           class="author-name hover:text-primary">
+                            <span th:text="${post.author.fullName ?: post.author.username}"></span>
+                            <span th:if="${post.author.role.name() != 'PERSONAL'}" class="badge ml-2"
+                                  th:text="${post.author.role}"></span>
+                        </a>
+                        <span class="post-time"
+                              th:text="${#temporals.format(post.createdAt,'dd MMM yyyy, HH:mm')}"></span>
                     </div>
-
-                    <div class="post-content mt-4" style="font-size: 1.25rem;" th:text="${post.content}"></div>
-
-                    <!-- Post Image Display -->
-                    <div th:if="${post.imageUrl != null}" class="post-image mt-4"
-                        style="border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
-                        <img th:src="@{${post.imageUrl}}" style="width: 100%; max-height: 600px; object-fit: cover;"
-                            alt="Post content" />
-                    </div>
-
-                    <!-- Hashtags — clickable -->
-                    <div class="flex gap-2 mt-4" th:if="${post.hashtags != null and !#strings.isEmpty(post.hashtags)}">
-                        <a th:each="tag : ${#strings.arraySplit(post.hashtags,',')}"
-                            th:href="@{/posts/search(hashtag=${#strings.trim(tag).replace('#','')})}"
-                            class="text-sm font-bold" style="color: var(--primary); text-decoration: none;"
-                            th:text="${#strings.trim(tag).startsWith('#') ? #strings.trim(tag) : '#' + #strings.trim(tag)}"></a>
-                    </div>
-
-                    <div th:if="${post.ctaLabel}" class="mt-4">
-                        <a th:href="${post.ctaUrl}" class="btn btn-primary btn-full" th:text="${post.ctaLabel}"
-                            target="_blank"></a>
-                    </div>
-
-                    <div class="post-actions mt-6">
-                        <form th:action="@{'/posts/' + ${post.id} + '/like'}" method="post">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                            <button type="submit" class="action-item" th:classappend="${isLiked ? 'text-primary' : ''}">
-                                <i data-lucide="heart" th:style="${isLiked ? 'fill: var(--primary)' : ''}"></i>
-                                <span th:text="${likeCount}">0</span>
-                            </button>
-                        </form>
-                        <div class="action-item">
-                            <i data-lucide="message-circle"></i>
-                            <span th:text="${comments.size()}">0</span>
-                        </div>
-                        <form th:action="@{'/posts/' + ${post.id} + '/share'}" method="post"
-                            th:if="${post.postType.name() != 'REPOST'}" style="margin-left: auto;">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                            <button type="submit" class="action-item">
-                                <i data-lucide="share-2" class="icon-mint"></i>
-                                <span th:text="${post.shares.size()}">0</span>
+                    <div th:if="${post.author.id == currentUser.id}" style="margin-left: auto;" class="flex gap-2">
+                        <a th:href="@{'/posts/' + ${post.id} + '/edit'}" class="btn btn-ghost btn-sm">
+                            <i data-lucide="edit-2" style="width: 16px;"></i>
+                        </a>
+                        <form th:action="@{'/posts/' + ${post.id} + '/delete'}" method="post"
+                              onsubmit="return confirm('Delete this post?');">
+                            <button type="submit" class="btn btn-ghost btn-sm" style="color: var(--danger);">
+                                <i data-lucide="trash-2" style="width: 16px;"></i>
                             </button>
                         </form>
                     </div>
                 </div>
 
-                <!-- Comments Section -->
-                <div class="card">
-                    <h3 class="mb-4">Comments</h3>
+                <div class="post-content mt-4" style="font-size: 1.25rem;" th:text="${post.content}"></div>
 
-                    <form th:action="@{'/posts/' + ${post.id} + '/comment'}" method="post" class="mb-8">
-                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                        <div class="flex gap-3">
-                            <textarea name="content" class="form-control" rows="2" placeholder="Add a comment..."
-                                required></textarea>
-                            <button type="submit" class="btn btn-primary" style="align-self: flex-end;">
-                                <i data-lucide="send" style="width: 18px;"></i>
+                <!-- Post Image Display -->
+                <div th:if="${post.imageUrl != null}" class="post-image mt-4"
+                     style="border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
+                    <img th:src="@{${post.imageUrl}}" style="width: 100%; max-height: 600px; object-fit: cover;"
+                         alt="Post content" />
+                </div>
+
+                <!-- Hashtags — clickable -->
+                <div class="flex gap-2 mt-4" th:if="${post.hashtags != null and !#strings.isEmpty(post.hashtags)}">
+                    <a th:each="tag : ${#strings.arraySplit(post.hashtags,',')}"
+                       th:href="@{/posts/search(hashtag=${#strings.trim(tag).replace('#','')})}"
+                       class="text-sm font-bold" style="color: var(--primary); text-decoration: none;"
+                       th:text="${#strings.trim(tag).startsWith('#') ? #strings.trim(tag) : '#' + #strings.trim(tag)}"></a>
+                </div>
+
+                <div th:if="${post.ctaLabel}" class="mt-4">
+                    <a th:href="${post.ctaUrl}" class="btn btn-primary btn-full" th:text="${post.ctaLabel}"
+                       target="_blank"></a>
+                </div>
+
+                <div class="post-actions mt-6" style="display: flex; gap: 1.5rem; align-items: center;">
+                    <div class="flex items-center gap-1" style="color: var(--text-secondary);">
+                        <form th:action="@{'/posts/' + ${post.id} + '/like'}" method="post"
+                              style="display: inline-block;">
+                            <button type="submit" class="btn btn-ghost btn-sm"
+                                    style="padding: 0.4rem; border-radius: 50%;">
+                                <i data-lucide="heart" th:class="${isLiked ? 'liked-heart' : 'icon-peach'}"
+                                   style="width: 20px;"></i>
                             </button>
-                        </div>
-                    </form>
-
-                    <div th:if="${comments.empty}" class="text-center py-8 text-muted">
-                        No comments yet.
+                        </form>
+                        <span class="text-xs font-bold hover:underline" style="cursor: pointer;"
+                              th:onclick="'openModal(\'' + @{'/feed/post/' + ${post.id} + '/likes'} + '\')'"
+                              th:text="${likeCount}">0</span>
                     </div>
 
-                    <div th:each="comment : ${comments}" class="flex gap-3 mb-6 pb-6"
-                        style="border-bottom: 1px solid var(--border-color);">
-                        <div class="avatar" style="width: 32px; height: 32px; font-size: 0.75rem; overflow: hidden;">
-                            <img th:if="${comment.author.profilePicture != null && !comment.author.profilePicture.isEmpty()}"
-                                th:src="@{${comment.author.profilePicture}}"
-                                style="width: 100%; height: 100%; object-fit: cover;" alt="" />
-                            <span
+                    <div class="flex items-center gap-1" style="color: var(--text-secondary);">
+                        <div class="btn btn-ghost btn-sm"
+                             style="padding: 0.4rem; border-radius: 50%; cursor: default;">
+                            <i data-lucide="message-circle" class="icon-sky" style="width: 20px;"></i>
+                        </div>
+                        <span class="text-xs font-bold" th:text="${comments.size()}">0</span>
+                    </div>
+
+                    <div class="flex items-center gap-1" style="color: var(--text-secondary); margin-left: auto;"
+                         th:if="${post.postType.name() != 'REPOST'}">
+                        <form th:action="@{'/posts/' + ${post.id} + '/share'}" method="post"
+                              style="display: inline-block;">
+                            <button type="submit" class="btn btn-ghost btn-sm"
+                                    style="padding: 0.4rem; border-radius: 50%;">
+                                <i data-lucide="share-2" class="icon-mint" style="width: 20px;"></i>
+                            </button>
+                        </form>
+                        <span class="text-xs font-bold hover:underline" style="cursor: pointer;"
+                              th:onclick="'openModal(\'' + @{'/feed/post/' + ${post.id} + '/shares'} + '\')'"
+                              th:text="${post.shares.size()}">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="card">
+                <h3 class="mb-4">Comments</h3>
+
+                <form th:action="@{'/posts/' + ${post.id} + '/comment'}" method="post" class="mb-8">
+                    <div class="flex gap-3">
+                            <textarea name="content" class="form-control" rows="2" placeholder="Add a comment..."
+                                      required></textarea>
+                        <button type="submit" class="btn btn-primary" style="align-self: flex-end;">
+                            <i data-lucide="send" style="width: 18px;"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <div th:if="${comments.empty}" class="text-center py-8 text-muted">
+                    No comments yet.
+                </div>
+
+                <div th:each="comment : ${comments}" class="flex gap-3 mb-6 pb-6"
+                     style="border-bottom: 1px solid var(--border-color);">
+                    <div class="avatar" style="width: 32px; height: 32px; font-size: 0.75rem; overflow: hidden;">
+                        <img th:if="${comment.author.profilePicture != null && !comment.author.profilePicture.isEmpty()}"
+                             th:src="@{${comment.author.profilePicture}}"
+                             style="width: 100%; height: 100%; object-fit: cover;" alt="" />
+                        <span
                                 th:if="${comment.author.profilePicture == null || comment.author.profilePicture.isEmpty()}"
                                 th:text="${comment.author.username.substring(0,1).toUpperCase()}"></span>
-                        </div>
-                        <div style="flex: 1;">
-                            <div class="flex items-center justify-between">
-                                <a th:href="@{'/profile/' + ${comment.author.username}}" class="text-sm font-bold"
-                                    th:text="${comment.author.fullName ?: comment.author.username}"></a>
-                                <div class="flex items-center gap-2">
+                    </div>
+                    <div style="flex: 1;">
+                        <div class="flex items-center justify-between">
+                            <a th:href="@{'/profile/' + ${comment.author.username}}" class="text-sm font-bold"
+                               th:text="${comment.author.fullName ?: comment.author.username}"></a>
+                            <div class="flex items-center gap-2">
                                     <span class="text-xs text-muted"
-                                        th:text="${#temporals.format(comment.createdAt,'dd MMM, HH:mm')}"></span>
-                                    <form
+                                          th:text="${#temporals.format(comment.createdAt,'dd MMM, HH:mm')}"></span>
+                                <form
                                         th:if="${comment.author.id == currentUser.id or post.author.id == currentUser.id}"
                                         th:action="@{'/posts/comments/' + ${comment.id} + '/delete'}" method="post"
                                         onsubmit="return confirm('Delete this comment?');">
-                                        <input type="hidden" th:name="${_csrf.parameterName}"
-                                            th:value="${_csrf.token}" />
-                                        <input type="hidden" name="postId" th:value="${post.id}" />
-                                        <button type="submit" class="text-danger"
-                                            style="background:none; border:none; cursor:pointer;">
-                                            <i data-lucide="trash-2" style="width: 14px;"></i>
-                                        </button>
-                                    </form>
-                                </div>
+                                    <input type="hidden" name="postId" th:value="${post.id}" />
+                                    <button type="submit" class="text-danger btn-ghost btn-sm"
+                                            style="background:none; border:none; cursor:pointer; padding: 0.25rem; border-radius: 4px;"
+                                            title="Delete Comment">
+                                        <i data-lucide="trash-2" style="width: 14px;"></i>
+                                    </button>
+                                </form>
                             </div>
-                            <div class="text-sm text-secondary mt-1" th:text="${comment.content}"></div>
                         </div>
+                        <div class="text-sm text-secondary mt-1" th:text="${comment.content}"></div>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 </body>
 
 </html>
