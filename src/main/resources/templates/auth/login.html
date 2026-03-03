@@ -9,7 +9,7 @@
     <link
             href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Inter:wght@300;400;500&display=swap"
             rel="stylesheet" />
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script th:src="@{/js/lucide.min.js}"></script>
     <link th:href="@{/css/styles.css}" rel="stylesheet" />
 </head>
 
@@ -52,15 +52,41 @@
         </div>
 
         <div class="form-group">
-            <label class="form-label" for="password">Password</label>
-            <input type="password" id="password" name="password" class="form-control"
-                   placeholder="Enter your password" required />
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <label class="form-label" for="password" style="margin-bottom: 0;">Password</label>
+                <a th:href="@{/forgot-password}" class="font-bold icon-sky"
+                   style="font-size: 0.85rem; text-decoration: none;">Forgot password?</a>
+            </div>
+            <div class="form-control-password-wrapper">
+                <input type="password" id="password" name="password" class="form-control"
+                       placeholder="Enter your password" required style="padding-right: 3rem;" />
+                <button type="button" class="password-toggle" onclick="togglePasswordVisibility('password')">
+                    <i data-lucide="eye" style="width: 18px;"></i>
+                </button>
+            </div>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-full mt-4">
-            <i data-lucide="log-in" style="width: 18px; margin-right: 0.5rem;"></i>
-            Log In
-        </button>
+        <script>
+            function togglePasswordVisibility(id) {
+                const input = document.getElementById(id);
+                const wrapper = input.nextElementSibling;
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    wrapper.innerHTML = '<i data-lucide="eye-off" style="width: 18px;"></i>';
+                } else {
+                    input.type = 'password';
+                    wrapper.innerHTML = '<i data-lucide="eye" style="width: 18px;"></i>';
+                }
+                if (window.lucide) window.lucide.createIcons();
+            }
+        </script>
+
+        <div class="text-center mt-6 mb-2">
+            <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2.5rem; font-size: 1rem;">
+                <i data-lucide="log-in" style="width: 20px; margin-right: 0.5rem;"></i>
+                Log In
+            </button>
+        </div>
     </form>
 
     <div style="margin: 2rem 0; display: flex; align-items: center; gap: 1rem;">
